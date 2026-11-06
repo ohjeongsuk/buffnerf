@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "BuffNerf",
@@ -9,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={cn("font-sans", geist.variable)}>
       <body className="antialiased">
         <header className="border-b border-neutral-200 dark:border-neutral-800">
           <nav className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
