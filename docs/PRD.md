@@ -177,4 +177,4 @@ P0는 2주 안에 반드시 완성하고, P1은 시간이 남을 때, P2는 이�
 - [x] Steam 게임: **오버워치**(appid 2357570), **이터널 리턴**(appid 1049590). 둘 다 캐릭터별 상향/하향이 수치로 나오는 게임이다. Steam 뉴스에 패치노트 전문이 없으면 롤과 같은 방식(공식 사이트 자동 수집 → 실패 시 수동 등록)으로 원문을 확보한다.
 - [x] 배포: **AWS 서울 리전** — 프론트 Amplify Hosting, 백엔드 EC2 t3.small(2GB), DB RDS PostgreSQL db.t4g.micro. 예상 비용은 월 약 $37(EC2 약 $19 + RDS 약 $18, Amplify는 무료 한도 안), 2주 기준 약 $18이며 신규 계정 크레딧으로 충당한다. 첫날 AWS Budgets로 예산 알림을 건다.
 - [x] 서비스 이름: **BuffNerf (버프너프)**
-- [ ] Amplify Hosting이 지원하는 Next.js 버전 확인 (2026년 10월 기준 공식 SSR 지원은 12~15). 지원 범위 밖이면 Next.js 15로 고정한다.
+- [x] Amplify Hosting이 지원하는 Next.js 버전: **Next.js 15 (15.5.29)로 고정** (2026년 10월 기준 공식 SSR 지원 12~15)

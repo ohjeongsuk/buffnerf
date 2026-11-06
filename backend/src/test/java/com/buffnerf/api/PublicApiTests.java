@@ -44,7 +44,8 @@ class PublicApiTests {
 		mvc.perform(get("/api/games/" + er.getId() + "/patches"))
 				.andExpect(jsonPath("$.content[0].version").value("pub-2")) // 최신순
 				.andExpect(jsonPath("$.content[0].nerfs").value(2))
-				.andExpect(jsonPath("$.content[1].buffs").value(1));       // 재키 2항목 = 1명
+				.andExpect(jsonPath("$.content[1].buffs").value(1))        // 재키 2항목 = 1명
+				.andExpect(jsonPath("$.page.totalPages").value(1));         // 프론트가 쓰는 고정 형식
 
 		mvc.perform(get("/api/patches/" + p1.getId()))
 				.andExpect(jsonPath("$.changes.length()").value(2))

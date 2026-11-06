@@ -10,6 +10,7 @@
 
 - 로컬 DB: `docker compose up -d` (루트). 호스트 포트 **5433** (이 PC의 Windows PostgreSQL 서비스가 5432 사용)
 - 빌드/테스트: `cd backend && ./gradlew build` (테스트는 Docker 필요)
+- 프론트: `cd frontend && npm run dev` (Next.js 15 고정: Amplify 지원 범위). `/api/*`는 `API_BASE`(기본 localhost:8080)로 프록시
 - 환경변수: `.env.example` 참고
 
 ## 규칙
