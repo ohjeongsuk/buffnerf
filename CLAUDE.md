@@ -9,7 +9,7 @@
 ## 명령
 
 - 로컬 DB: `docker compose up -d` (루트). 호스트 포트 **5433** (이 PC의 Windows PostgreSQL 서비스가 5432 사용)
-- 빌드/테스트: `cd backend && mvn verify` (Maven, 테스트는 Docker 필요). 실행: `mvn spring-boot:run`
+- 빌드/테스트: `cd backend && ./mvnw verify` (Maven wrapper, 테스트는 Docker 필요). 실행: `./mvnw spring-boot:run`
 - 프론트: `cd frontend && npm run dev` (Next.js 15 고정: Amplify 지원 범위). `/api/*`는 `API_BASE`(기본 localhost:8080)로 프록시
 - 환경변수: `.env.example` 참고
 
