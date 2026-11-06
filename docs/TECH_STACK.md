@@ -18,7 +18,7 @@ PRD(`docs/PRD.md`)의 요구사항을 기준으로 기술을 하나씩 정한다
 | --- | --- | --- |
 | Java | 21 LTS | 21 |
 | Spring Boot | Spring Initializr 기본값 | 4.1.2 |
-| 빌드 | Gradle Kotlin DSL (wrapper) | 9.8.2 |
+| 빌드 | Maven (`backend/pom.xml`, 수업 자료와 통일) | 3.9 이상 |
 | DB 접근 | Spring Data JPA (`ddl-auto=validate`) | Boot 관리 |
 | 마이그레이션 | Flyway (`src/main/resources/db/migration`) | Boot 관리 |
 | 스케줄러 | Spring `@Scheduled` | Boot 내장 |
