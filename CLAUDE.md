@@ -8,7 +8,7 @@
 
 ## 명령
 
-- 로컬 DB: `docker compose up -d` (루트)
+- 로컬 DB: `docker compose up -d` (루트). 호스트 포트 **5433** (이 PC의 Windows PostgreSQL 서비스가 5432 사용)
 - 빌드/테스트: `cd backend && ./gradlew build` (테스트는 Docker 필요)
 - 환경변수: `.env.example` 참고
 
