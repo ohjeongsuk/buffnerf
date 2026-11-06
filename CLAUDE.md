@@ -4,7 +4,13 @@
 
 - 요구사항: `docs/PRD.md` (원본: https://claude.ai/artifact/7WCh2biP4gU8fwjQb2vSQD)
 - 확정: 프론트 Next.js(Amplify), 백엔드 EC2, DB RDS PostgreSQL, LLM Claude Sonnet 5.5(`claude-sonnet-5-5`)
-- 미정: 백엔드 언어/프레임워크 → `docs/TECH_STACK.md`에서 결정
+- 백엔드: Java 21 + Spring Boot 4.1.2, `backend/` (상세는 `docs/TECH_STACK.md`)
+
+## 명령
+
+- 로컬 DB: `docker compose up -d` (루트)
+- 빌드/테스트: `cd backend && ./gradlew build` (테스트는 Docker 필요)
+- 환경변수: `.env.example` 참고
 
 ## 규칙
 
