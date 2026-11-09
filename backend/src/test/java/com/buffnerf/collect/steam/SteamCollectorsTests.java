@@ -34,7 +34,18 @@ class SteamCollectorsTests {
 		assertEquals("오버워치 패치 노트 - 2026년 11월 4일", p.version());
 		assertEquals(Instant.parse("2026-11-02T15:00:00Z"), p.publishedAt()); // KST 자정
 		assertEquals("https://overwatch.blizzard.com/ko-kr/news/patch-notes/live/2026/11/", p.sourceUrl());
+		assertEquals("2026년 11월 4일 패치 노트", p.title());
 		assertTrue(p.rawContent().contains("트레이서\n펄스 쌍권총 피해량이 6에서 5로 감소합니다."), p.rawContent());
+	}
+
+	@Test
+	void overwatchTitleUnified() {
+		Instant aug4 = Instant.parse("2026-08-03T15:00:00Z"); // KST 8월 4일
+		assertEquals("2026년 8월 12일 패치 노트", OverwatchCollector.title("오버워치 2 패치 노트 - 2026년 8월 12일", aug4));
+		assertEquals("2026년 7월 30일 패치 노트", OverwatchCollector.title("Overwatch Retail Patch Notes – July 30, 2026", aug4));
+		assertEquals("2026년 8월 4일 패치 노트", OverwatchCollector.title("콘솔 플랫폼에서의 비허가 주변기기 사용 관련 업데이트", aug4));
+		assertEquals("2026년 8월 4일 패치 노트", OverwatchCollector.title("Season 3, 2026 update", aug4)); // 날짜 아님 → 게시일
+		assertEquals("이름만 있는 글", OverwatchCollector.title("이름만 있는 글", null));
 	}
 
 	@Test

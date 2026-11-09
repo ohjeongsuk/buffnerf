@@ -28,6 +28,7 @@ class OverwatchCollector implements PatchCollector {
 	private static final String BASE = "https://overwatch.blizzard.com/ko-kr/news/patch-notes/live/";
 	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 	private static final Pattern KO_DATE = Pattern.compile("(\\d{4})년\\s*(\\d{1,2})월\\s*(\\d{1,2})일");
+	private static final Pattern EN_DATE = Pattern.compile("([A-Z][a-z]+)\\s+(\\d{1,2}),\\s*(\\d{4})");
 
 	@Override
 	public boolean supports(Game game) {
@@ -65,11 +66,29 @@ class OverwatchCollector implements PatchCollector {
 			Element title = patch.selectFirst(".PatchNotes-patchTitle");
 			if (title == null) continue;
 			Element date = patch.selectFirst(".PatchNotes-date");
+			Instant published = date == null ? null : koDate(date.text());
 			String text = HtmlText.lines(patch);
-			out.add(new CollectedPatch(title.text(), title.text(), date == null ? null : koDate(date.text()),
+			// version은 사이트 제목 그대로 (중복 수집 기준), 화면 제목은 날짜 형식으로 통일
+			out.add(new CollectedPatch(title.text(), title(title.text(), published), published,
 					text.isBlank() ? null : text, text.isBlank() ? "empty patch notes body" : null, List.of(), doc.location()));
 		}
 		return out;
+	}
+
+	/** "2026년 7월 30일 패치 노트": 제목의 날짜(한/영), 없으면 게시일 */
+	static String title(String raw, Instant published) {
+		LocalDate d = null;
+		Matcher ko = KO_DATE.matcher(raw), en = EN_DATE.matcher(raw);
+		try {
+			if (ko.find())
+				d = LocalDate.of(Integer.parseInt(ko.group(1)), Integer.parseInt(ko.group(2)), Integer.parseInt(ko.group(3)));
+			else if (en.find())
+				d = LocalDate.of(Integer.parseInt(en.group(3)), Month.valueOf(en.group(1).toUpperCase()), Integer.parseInt(en.group(2)));
+		} catch (IllegalArgumentException | DateTimeException e) {
+			d = null; // 날짜처럼 보이지만 아닌 경우 (예: "Season 3, 2026")
+		}
+		if (d == null && published != null) d = published.atZone(KST).toLocalDate();
+		return d == null ? raw : "%d년 %d월 %d일 패치 노트".formatted(d.getYear(), d.getMonthValue(), d.getDayOfMonth());
 	}
 
 	static Instant koDate(String s) {
