@@ -1,10 +1,13 @@
 package com.buffnerf.collect.steam;
 
 import com.buffnerf.collect.HtmlText;
+import com.buffnerf.collect.PatchCollector;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,11 +34,22 @@ class SteamCollectorsTests {
 		var patches = OverwatchCollector.parse(doc);
 		assertEquals(1, patches.size());
 		var p = patches.getFirst();
-		assertEquals("오버워치 패치 노트 - 2026년 11월 4일", p.version());
+		assertEquals("2026-11-03", p.version(), "중복 수집 기준은 게시일(KST)");
 		assertEquals(Instant.parse("2026-11-02T15:00:00Z"), p.publishedAt()); // KST 자정
 		assertEquals("https://overwatch.blizzard.com/ko-kr/news/patch-notes/live/2026/11/", p.sourceUrl());
 		assertEquals("2026년 11월 4일 패치 노트", p.title());
 		assertTrue(p.rawContent().contains("트레이서\n펄스 쌍권총 피해량이 6에서 5로 감소합니다."), p.rawContent());
+	}
+
+	@Test
+	void overwatchRetitledPatchIsNotCollectedAgain() {
+		// 영문 제목으로 저장된 패치를 블리자드가 한국어 제목으로 바꿔도 게시일이 같으면 같은 패치
+		var retitled = new PatchCollector.CollectedPatch("2026-11-05", "2026년 11월 6일 패치 노트", null, "본문", null, List.of(), null);
+		var fresh = new PatchCollector.CollectedPatch("2026-11-12", "2026년 11월 12일 패치 노트", null, "본문", null, List.of(), null);
+		var sameDaySecond = new PatchCollector.CollectedPatch("2026-11-12", "2026년 11월 12일 패치 노트", null, "다른 글", null, List.of(), null);
+
+		var result = OverwatchCollector.newOnly(List.of(fresh, sameDaySecond, retitled), Set.of("2026-11-05"));
+		assertEquals(List.of(fresh), result, "저장된 날짜는 빼고, 같은 날짜가 두 번이면 최신 글 하나만");
 	}
 
 	@Test
