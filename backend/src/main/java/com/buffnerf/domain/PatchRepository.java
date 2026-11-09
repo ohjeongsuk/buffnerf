@@ -21,6 +21,8 @@ public interface PatchRepository extends JpaRepository<Patch, Long> {
 
 	List<Patch> findByContentStatus(Patch.ContentStatus status);
 
+	List<Patch> findByContentStatusOrderByPublishedAtDesc(Patch.ContentStatus status);
+
 	Page<Patch> findByGameIdAndIsPatchNoteTrueOrderByIdDesc(Long gameId, Pageable pageable);
 
 	List<Patch> findByGameIdAndIsPatchNoteTrueOrderByIdAsc(Long gameId);

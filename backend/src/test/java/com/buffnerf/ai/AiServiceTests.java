@@ -12,6 +12,8 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.Instant;
 import java.util.List;
@@ -24,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AiServiceTests {
 
 	static final AtomicInteger calls = new AtomicInteger();
+	static volatile boolean quotaExhausted;
 
 	@TestConfiguration
 	static class FakeLlm {
@@ -38,6 +41,8 @@ class AiServiceTests {
 				@SuppressWarnings("unchecked")
 				public <T> Result<T> generate(String system, String prompt, Class<T> schema, Effort effort) {
 					calls.incrementAndGet();
+					if (quotaExhausted)
+						throw HttpClientErrorException.create(HttpStatus.TOO_MANY_REQUESTS, "quota", null, null, null);
 					Object v = schema == Summary.class
 							? new Summary(List.of("트레이서가 하향됐다.", "겐지가 상향됐다.", "맵이 바뀌었다."))
 							: new Extraction(List.of(
@@ -84,5 +89,24 @@ class AiServiceTests {
 
 		assertTrue(aiRuns.existsByPatchIdAndTaskAndPromptVersionAndStatus(id, AiRun.Task.EXTRACT, Prompts.VERSION,
 				AiRun.Status.SUCCESS));
+	}
+
+	@Test
+	void quotaExhaustedIsRecordedAndStopsTheBatch() {
+		Game overwatch = games.findAll().stream().filter(g -> g.getName().equals("Overwatch")).findFirst().orElseThrow();
+		Patch p = new Patch(overwatch, "ai-quota-test", "t", Instant.now());
+		p.setContent("원문", Patch.ContentSource.MANUAL);
+		Long id = patches.save(p).getId();
+		calls.set(0);
+		quotaExhausted = true;
+		try {
+			// 429는 위로 올라가야 processPendingAsync가 배치를 멈춘다
+			assertThrows(HttpClientErrorException.TooManyRequests.class, () -> ai.process(id));
+		} finally {
+			quotaExhausted = false;
+		}
+		assertEquals(1, calls.get(), "SUMMARY에서 멈추고 EXTRACT는 부르지 않음");
+		assertTrue(aiRuns.existsByPatchIdAndTaskAndPromptVersionAndStatus(id, AiRun.Task.SUMMARY, Prompts.VERSION,
+				AiRun.Status.FAILED));
 	}
 }

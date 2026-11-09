@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -44,10 +45,20 @@ public class AiService {
 		process(patchId);
 	}
 
-	/** 원문이 있는 모든 패치. 이미 끝난 작업은 AiRun 확인으로 건너뛴다. */
+	/**
+	 * 원문이 있는 모든 패치, 최신순. 이미 끝난 작업은 AiRun 확인으로 건너뛴다.
+	 * 일일 한도(429)에 걸리면 멈춘다: 남은 패치는 다음 날 배치가 이어서 처리.
+	 */
 	@Async
 	public void processPendingAsync() {
-		for (Patch p : patches.findByContentStatus(Patch.ContentStatus.READY)) process(p.getId());
+		for (Patch p : patches.findByContentStatusOrderByPublishedAtDesc(Patch.ContentStatus.READY)) {
+			try {
+				process(p.getId());
+			} catch (HttpClientErrorException.TooManyRequests e) {
+				log.warn("LLM quota exhausted at patch {}, stopping batch until next run", p.getId());
+				return;
+			}
+		}
 	}
 
 	public void process(Long patchId) {
@@ -107,6 +118,8 @@ public class AiService {
 			aiRuns.save(new AiRun(p, task, llm.model(), Prompts.VERSION,
 					r == null ? null : (int) r.inputTokens(), r == null ? null : (int) r.outputTokens(),
 					AiRun.Status.FAILED));
+			// 한도 초과는 다음 패치도 똑같이 실패하므로 배치를 멈추게 위로 올린다 (RestClient 기반 Gemini/Ollama)
+			if (e instanceof HttpClientErrorException.TooManyRequests tooMany) throw tooMany;
 		}
 	}
 
