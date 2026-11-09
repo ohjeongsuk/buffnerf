@@ -1,8 +1,10 @@
-# BuffNerf (버프너프)
+# BuffLog (버프로그)
 
 **게임 패치노트, 빠르게 확인.** 리그 오브 레전드·오버워치·이터널 리턴의 공식 패치노트를 AI가 3줄로 요약하고, 캐릭터별 상향·하향을 타임라인으로 보여주는 웹 서비스입니다.
 
-- 요구사항: [`docs/PRD.md`](docs/PRD.md) · 기술 스택: [`docs/TECH_STACK.md`](docs/TECH_STACK.md)
+**🔗 서비스: https://main.d29bu1wqtdyiih.amplifyapp.com**
+
+- 요구사항: [`docs/PRD.md`](docs/PRD.md) · 기술 스택: [`docs/TECH_STACK.md`](docs/TECH_STACK.md) · 배포: [`docs/DEPLOY.md`](docs/DEPLOY.md)
 
 ## 주요 기능
 
@@ -29,6 +31,16 @@
 - 백엔드: Java 21, Spring Boot 4.1.2, JPA + Flyway, `backend/`
 - 프론트: Next.js 15, Tailwind, shadcn/ui, `frontend/`
 - LLM: `LlmClient` 인터페이스 뒤에 Gemini(기본, 무료 등급)·Ollama(로컬)·Claude 구현체. `LLM_PROVIDER`로 선택
+
+## 배포
+
+| 구성 | 서비스 (서울 리전) |
+| --- | --- |
+| 프론트 | AWS Amplify Hosting (Next.js SSR), main 브랜치 push 시 자동 빌드 |
+| 백엔드 | EC2 t3.small, systemd 서비스, 매일 06:00 수집·AI 처리 |
+| DB | RDS PostgreSQL 17, db.t4g.micro (외부 비공개, EC2에서만 접속) |
+
+절차와 스크립트는 [`docs/DEPLOY.md`](docs/DEPLOY.md), [`deploy/`](deploy/) 참고.
 
 ## 데이터 출처
 
@@ -118,4 +130,4 @@ API 키는 서버 환경변수로만 관리하고 커밋하지 않는다 (`.env`
 
 League of Legends는 Riot Games, Inc., Overwatch는 Blizzard Entertainment, Inc., 이터널 리턴은 님블뉴런의 상표입니다.
 
-BuffNerf was created under Riot Games' "Legal Jibber Jabber" policy using assets owned by Riot Games. Riot Games does not endorse or sponsor this project.
+BuffLog was created under Riot Games' "Legal Jibber Jabber" policy using assets owned by Riot Games. Riot Games does not endorse or sponsor this project.
