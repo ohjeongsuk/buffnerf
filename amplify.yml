@@ -1,0 +1,22 @@
+# Amplify Hosting 빌드 설정 (모노레포: 프론트는 frontend/). 콘솔 환경변수에 API_BASE, AMPLIFY_MONOREPO_APP_ROOT=frontend 설정.
+version: 1
+applications:
+  - appRoot: frontend
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+        build:
+          commands:
+            # Next.js 서버 런타임과 rewrites가 API_BASE를 읽도록 빌드 시점에 .env.production으로 넘긴다
+            - echo "API_BASE=$API_BASE" >> .env.production
+            - npm run build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+          - .next/cache/**/*

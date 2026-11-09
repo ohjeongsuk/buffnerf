@@ -1,0 +1,16 @@
+# /etc/systemd/system/buffnerf.service (setup-ec2.sh가 복사)
+[Unit]
+Description=BuffNerf backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=buffnerf
+EnvironmentFile=/etc/buffnerf.env
+# t3.small(2GB): 힙 768MB, 나머지는 OS·메타스페이스
+ExecStart=/usr/bin/java -Xms256m -Xmx768m -jar /opt/buffnerf/backend.jar
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
