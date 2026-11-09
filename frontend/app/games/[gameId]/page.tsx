@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { api, fmtDate, type CharacterView, type Game, type Page, type PatchSummary } from "@/lib/api";
+import { api, fmtDate, gameColor, type CharacterView, type Game, type Page, type PatchSummary } from "@/lib/api";
 import { Empty } from "../../components";
 
 /** 패치 목록 + 패치별 상향·하향 차트 (F5, F7) */
@@ -24,7 +24,10 @@ export default async function GamePage({
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-bold">{game.name}</h1>
+      <h1 className="mb-4 flex items-center gap-2 text-2xl font-bold">
+        <span aria-hidden className={`inline-block size-3 rounded-full ${gameColor(game.name).dot}`} />
+        {game.name}
+      </h1>
 
       {stats && stats.length > 0 && <StatsChart stats={stats.slice(-20)} />}
 

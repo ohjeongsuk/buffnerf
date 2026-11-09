@@ -81,6 +81,28 @@ export function attributeLabel(attribute: string): string {
   return STAT_LABEL[attribute] ?? attribute;
 }
 
+/**
+ * 게임 구분색. 상향(초록)·하향(빨강)·조정(노랑)과 겹치지 않게 파랑·주황·보라, 표시(태그·띠)에만 쓴다.
+ * Tailwind가 클래스를 찾을 수 있게 문자열을 그대로 둔다.
+ */
+const GAME_COLOR: Record<string, { tag: string; bar: string; dot: string }> = {
+  "League of Legends": { tag: "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200", bar: "border-t-sky-500 dark:border-t-sky-500", dot: "bg-sky-500" },
+  Overwatch: { tag: "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200", bar: "border-t-orange-500 dark:border-t-orange-500", dot: "bg-orange-500" },
+  "Eternal Return": { tag: "bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-200", bar: "border-t-violet-500 dark:border-t-violet-500", dot: "bg-violet-500" },
+};
+const NO_COLOR = { tag: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300", bar: "border-t-neutral-300", dot: "bg-neutral-400" };
+
+export function gameColor(name: string) {
+  return GAME_COLOR[name] ?? NO_COLOR;
+}
+
+/** 캐릭터 한 명의 판정: 전부 상향이면 BUFF, 전부 하향이면 NERF, 섞였거나 조정이면 ADJUST */
+export function verdict(cs: Change[]): ChangeType {
+  if (cs.every((c) => c.changeType === "BUFF")) return "BUFF";
+  if (cs.every((c) => c.changeType === "NERF")) return "NERF";
+  return "ADJUST";
+}
+
 export function fmtDate(iso: string | null): string {
   return iso ? new Date(iso).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" }) : "";
 }
