@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -39,11 +40,14 @@ class OverwatchCollector implements PatchCollector {
 	public List<CollectedPatch> collect(Game game, Set<String> knownVersions) {
 		List<CollectedPatch> newestFirst = new ArrayList<>();
 		YearMonth month = YearMonth.now(KST);
-		for (int i = 0; i < MONTHS; i++, month = month.minusMonths(1)) {
-			for (CollectedPatch p : parse(fetch(month)))
-				if (!knownVersions.contains(p.version())) newestFirst.add(p);
-		}
-		return newestFirst.reversed();
+		for (int i = 0; i < MONTHS; i++, month = month.minusMonths(1)) newestFirst.addAll(parse(fetch(month)));
+		return newOnly(newestFirst, knownVersions).reversed();
+	}
+
+	/** 이미 저장된 날짜와, 한 번의 수집 안에서 같은 날짜가 두 번 나온 것은 뺀다 (앞쪽 = 최신 글을 남김) */
+	static List<CollectedPatch> newOnly(List<CollectedPatch> newestFirst, Set<String> knownVersions) {
+		Set<String> seen = new HashSet<>(knownVersions);
+		return newestFirst.stream().filter(p -> seen.add(p.version())).toList();
 	}
 
 	private Document fetch(YearMonth m) {
@@ -68,8 +72,10 @@ class OverwatchCollector implements PatchCollector {
 			Element date = patch.selectFirst(".PatchNotes-date");
 			Instant published = date == null ? null : koDate(date.text());
 			String text = HtmlText.lines(patch);
-			// version은 사이트 제목 그대로 (중복 수집 기준), 화면 제목은 날짜 형식으로 통일
-			out.add(new CollectedPatch(title.text(), title(title.text(), published), published,
+			// version(중복 수집 기준)은 게시일: 블리자드가 영문 제목을 나중에 한국어로 바꿔도 같은 패치로 본다
+			// ponytail: 같은 날 패치 글이 두 개면 하나만 남는다. 하루 두 번 패치가 실제로 나오면 날짜+순번으로 바꾼다.
+			String version = published == null ? title.text() : published.atZone(KST).toLocalDate().toString();
+			out.add(new CollectedPatch(version, title(title.text(), published), published,
 					text.isBlank() ? null : text, text.isBlank() ? "empty patch notes body" : null, List.of(), doc.location()));
 		}
 		return out;
