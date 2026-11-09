@@ -37,6 +37,8 @@ public class Patch {
 
 	private boolean isPatchNote = true;
 
+	private String sourceUrl;
+
 	protected Patch() {
 	}
 
@@ -63,6 +65,7 @@ public class Patch {
 
 	public void setSummaryKo(String summaryKo) { this.summaryKo = summaryKo; }
 	public void setPatchNote(boolean patchNote) { this.isPatchNote = patchNote; }
+	public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
 
 	public Long getId() { return id; }
 	public Game getGame() { return game; }
@@ -75,4 +78,5 @@ public class Patch {
 	public String getContentError() { return contentError; }
 	public String getSummaryKo() { return summaryKo; }
 	public boolean isPatchNote() { return isPatchNote; }
+	public String getSourceUrl() { return sourceUrl; }
 }

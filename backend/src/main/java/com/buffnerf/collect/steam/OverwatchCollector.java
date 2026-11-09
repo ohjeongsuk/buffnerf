@@ -67,7 +67,7 @@ class OverwatchCollector implements PatchCollector {
 			Element date = patch.selectFirst(".PatchNotes-date");
 			String text = HtmlText.lines(patch);
 			out.add(new CollectedPatch(title.text(), title.text(), date == null ? null : koDate(date.text()),
-					text.isBlank() ? null : text, text.isBlank() ? "empty patch notes body" : null, List.of()));
+					text.isBlank() ? null : text, text.isBlank() ? "empty patch notes body" : null, List.of(), doc.location()));
 		}
 		return out;
 	}

@@ -52,7 +52,7 @@ class PublicController {
 		var all = changes.findByPatchId(patchId);
 		Game g = p.getGame();
 		return new PatchDetail(p.getId(), g.getId(), g.getName(), p.getVersion(), p.getTitle(), p.getPublishedAt(),
-				p.getSummaryKo(), p.getContentStatus(), p.getContentSource(),
+				p.getSummaryKo(), p.getContentStatus(), p.getContentSource(), p.getSourceUrl(),
 				all.stream().map(c -> ChangeView.of(c, keys.displayName(g, c.getCharacterName()))).toList(),
 				g.getSource() == Game.Source.LOL ? Accuracy.of(all) : null);
 	}
@@ -129,7 +129,7 @@ class PublicController {
 	}
 
 	record PatchDetail(Long id, Long gameId, String gameName, String version, String title, Instant publishedAt,
-			String summaryKo, Patch.ContentStatus contentStatus, Patch.ContentSource contentSource,
+			String summaryKo, Patch.ContentStatus contentStatus, Patch.ContentSource contentSource, String sourceUrl,
 			List<ChangeView> changes, Accuracy accuracy) {
 	}
 

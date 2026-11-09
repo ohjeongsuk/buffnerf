@@ -27,12 +27,13 @@ class SteamCollectorsTests {
 				  <div class="PatchNotes-section"><h4>영웅 업데이트</h4>
 				    <div class="PatchNotesHeroUpdate-name">트레이서</div>
 				    <ul><li>펄스 쌍권총 피해량이 6에서 <b>5</b>로 감소합니다.</li></ul></div>
-				</div>""");
+				</div>""", "https://overwatch.blizzard.com/ko-kr/news/patch-notes/live/2026/11/");
 		var patches = OverwatchCollector.parse(doc);
 		assertEquals(1, patches.size());
 		var p = patches.getFirst();
 		assertEquals("오버워치 패치 노트 - 2026년 11월 4일", p.version());
 		assertEquals(Instant.parse("2026-11-02T15:00:00Z"), p.publishedAt()); // KST 자정
+		assertEquals("https://overwatch.blizzard.com/ko-kr/news/patch-notes/live/2026/11/", p.sourceUrl());
 		assertTrue(p.rawContent().contains("트레이서\n펄스 쌍권총 피해량이 6에서 5로 감소합니다."), p.rawContent());
 	}
 

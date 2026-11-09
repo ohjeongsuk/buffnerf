@@ -58,7 +58,7 @@ class EternalReturnCollector implements PatchCollector {
 		Instant published = Instant.ofEpochSecond(n.date());
 		Matcher m = LINK.matcher(n.contents());
 		if (!m.find())
-			return new CollectedPatch(version, n.title(), published, null, "no patch notes link in Steam post", List.of());
+			return new CollectedPatch(version, n.title(), published, null, "no patch notes link in Steam post", List.of(), null);
 		try {
 			Thread.sleep(1000); // 요청 간격
 			var doc = Jsoup.connect("https://playeternalreturn.com/posts/news/" + m.group(1) + "?hl=ko-KR")
@@ -68,12 +68,12 @@ class EternalReturnCollector implements PatchCollector {
 			String text = HtmlText.lines(body);
 			if (text.isBlank()) throw new IllegalStateException("empty patch notes body");
 			Element title = doc.selectFirst(".er-article-detail__title");
-			return new CollectedPatch(version, title == null ? n.title() : title.text(), published, text, null, List.of());
+			return new CollectedPatch(version, title == null ? n.title() : title.text(), published, text, null, List.of(), doc.location());
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new IllegalStateException(e);
 		} catch (Exception e) {
-			return new CollectedPatch(version, n.title(), published, null, e.toString(), List.of());
+			return new CollectedPatch(version, n.title(), published, null, e.toString(), List.of(), null);
 		}
 	}
 
