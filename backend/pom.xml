@@ -61,6 +61,17 @@
 			<artifactId>anthropic-java</artifactId>
 			<version>${anthropic-java.version}</version>
 		</dependency>
+		<!-- Ollama 구조화 출력용 JSON 스키마 생성 (anthropic-java가 쓰는 것과 같은 버전) -->
+		<dependency>
+			<groupId>com.github.victools</groupId>
+			<artifactId>jsonschema-generator</artifactId>
+			<version>4.38.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.victools</groupId>
+			<artifactId>jsonschema-module-jackson</artifactId>
+			<version>4.38.0</version>
+		</dependency>
 		<!-- PostgreSQL 드라이버 -->
 		<dependency>
 			<groupId>org.postgresql</groupId>

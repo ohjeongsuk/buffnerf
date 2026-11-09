@@ -9,6 +9,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -66,10 +69,14 @@ public class AiService {
 					changes.deleteByPatchIdAndSource(p.getId(), BalanceChange.Source.AI); // 새 promptVersion 재처리
 					String raw = squash(p.getRawContent());
 					int dropped = 0;
+					var seen = new HashSet<List<String>>();
 					for (var it : e.changes()) {
-						// 근거 문장이 원문에 없으면 환각으로 보고 버린다
+						// 근거 문장이 원문에 없으면 환각으로 보고 버린다. 컬럼 길이 초과 값, 같은 항목 반복도 버린다.
 						if (blank(it.characterName()) || blank(it.attribute()) || it.changeType() == null
-								|| blank(it.evidence()) || !raw.contains(squash(it.evidence()))) {
+								|| blank(it.evidence()) || !raw.contains(squash(it.evidence()))
+								|| it.characterName().length() > 100 || tooLong(it.attribute()) || tooLong(it.before())
+								|| tooLong(it.after())
+								|| !seen.add(Arrays.asList(it.characterName(), it.attribute(), it.before(), it.after()))) {
 							dropped++;
 							continue;
 						}
@@ -105,6 +112,11 @@ public class AiService {
 
 	private static boolean blank(String s) {
 		return s == null || s.isBlank();
+	}
+
+	/** balance_change의 attribute, before_value, after_value는 VARCHAR(200) */
+	private static boolean tooLong(String s) {
+		return s != null && s.trim().length() > 200;
 	}
 
 	private static String emptyToNull(String s) {

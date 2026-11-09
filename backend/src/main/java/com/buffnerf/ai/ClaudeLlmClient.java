@@ -7,10 +7,12 @@ import com.anthropic.models.messages.OutputConfig;
 import com.anthropic.models.messages.StopReason;
 import com.anthropic.models.messages.StructuredOutputConfig;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 // ponytail: 거절(refusal) 시 서버 측 fallback 없이 실패로 기록. 패치노트에서 거절이 실제로 나오면 fallbacks 베타 추가.
 @Component
+@ConditionalOnProperty(name = "llm.provider", havingValue = "claude")
 class ClaudeLlmClient implements LlmClient {
 
 	private static final long MAX_TOKENS = 32_000; // 변경 항목이 많은 패치(100건+) 추출도 잘리지 않게
