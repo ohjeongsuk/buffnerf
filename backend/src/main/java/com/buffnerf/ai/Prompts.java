@@ -10,7 +10,7 @@ import java.util.List;
 /** 프롬프트를 바꾸면 VERSION을 올린다 (AiRun 재호출 방지 기준). */
 final class Prompts {
 
-	static final String VERSION = "v1";
+	static final String VERSION = "v2"; // v2: 기본 모델을 Gemini 무료 등급으로 변경
 
 	private Prompts() {
 	}

@@ -43,6 +43,11 @@ class AiServiceTests {
 							: new Extraction(List.of(
 									new Item("트레이서", "펄스 쌍권총 피해량", BalanceChange.ChangeType.NERF, "6", "5",
 											"펄스 쌍권총 피해량:  6 → 5"),
+									// 작은 모델이 같은 항목을 반복한 경우
+									new Item("트레이서", "펄스 쌍권총 피해량", BalanceChange.ChangeType.NERF, "6", "5",
+											"펄스 쌍권총 피해량:  6 → 5"),
+									new Item("트레이서", "펄스 쌍권총 피해량", BalanceChange.ChangeType.NERF, "6", "5".repeat(201),
+											"펄스 쌍권총 피해량:  6 → 5"),
 									new Item("겐지", "질풍참 재사용 대기시간", BalanceChange.ChangeType.BUFF, "8", "7",
 											"원문에 없는 문장")));
 					return new Result<>((T) v, 100, 50);
@@ -72,7 +77,7 @@ class AiServiceTests {
 		assertEquals("트레이서가 하향됐다.\n겐지가 상향됐다.\n맵이 바뀌었다.", patches.findById(id).orElseThrow().getSummaryKo());
 
 		var saved = changes.findByPatchId(id);
-		assertEquals(1, saved.size(), "근거가 원문에 없는 항목은 버림");
+		assertEquals(1, saved.size(), "근거가 원문에 없는 항목, 반복 항목, 길이 초과 항목은 버림");
 		assertEquals("트레이서", saved.getFirst().getCharacterName());
 		assertEquals(BalanceChange.Source.AI, saved.getFirst().getSource());
 		assertEquals("5", saved.getFirst().getAfterValue());
