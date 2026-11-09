@@ -19,7 +19,7 @@ class PatchNoteCrawler {
 	private static final String BASE = "https://www.leagueoflegends.com/ko-kr/news/game-updates/";
 	private static final long DELAY_MS = 1000; // 요청 간격: 서버 부담 방지
 
-	record Note(String title, Instant publishedAt, String content) {
+	record Note(String title, Instant publishedAt, String content, String url) {
 	}
 
 	/** @throws NoSuchElementException 페이지 없음, IllegalStateException 본문 파싱 실패 */
@@ -61,6 +61,6 @@ class PatchNoteCrawler {
 		Element time = doc.selectFirst("time[datetime]");
 		return new Note(h1 == null ? null : h1.text(),
 				time == null ? null : Instant.parse(time.attr("datetime")),
-				content);
+				content, doc.location());
 	}
 }

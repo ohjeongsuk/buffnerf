@@ -20,10 +20,10 @@ public interface PatchCollector {
 
 	/**
 	 * rawContent가 null이면 원문 미확보(PENDING_CONTENT)로 저장되고 contentError가 실패 이유로 남는다.
-	 * changes는 코드로 계산한 DIFF 변경.
+	 * changes는 코드로 계산한 DIFF 변경. sourceUrl은 공식 패치노트 주소 (모르면 null).
 	 */
 	record CollectedPatch(String version, String title, Instant publishedAt, String rawContent,
-			String contentError, List<Change> changes) {
+			String contentError, List<Change> changes, String sourceUrl) {
 	}
 
 	record Change(String characterName, String attribute, BalanceChange.ChangeType changeType,

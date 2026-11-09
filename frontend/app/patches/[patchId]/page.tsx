@@ -18,7 +18,17 @@ export default async function PatchPage({ params }: { params: Promise<{ patchId:
         ← {p.gameName}
       </Link>
       <h1 className="mt-1 text-2xl font-bold">{p.title}</h1>
-      <p className="mb-4 text-sm text-neutral-400">{fmtDate(p.publishedAt)}</p>
+      <p className="mb-4 text-sm text-neutral-400">
+        {fmtDate(p.publishedAt)}
+        {p.sourceUrl && (
+          <>
+            {" · "}
+            <a href={p.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-600">
+              공식 패치노트 원문 ↗
+            </a>
+          </>
+        )}
+      </p>
 
       <section className="mb-6 rounded-lg bg-neutral-100 p-4 dark:bg-neutral-900">
         <h2 className="mb-2 text-sm font-semibold text-neutral-500">AI 3줄 요약</h2>

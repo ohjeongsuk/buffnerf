@@ -39,6 +39,7 @@ export type PatchDetail = {
   summaryKo: string | null;
   contentStatus: "READY" | "PENDING_CONTENT";
   contentSource: "CRAWLED" | "MANUAL" | null;
+  sourceUrl: string | null;
   changes: Change[];
   accuracy: Accuracy | null;
 };

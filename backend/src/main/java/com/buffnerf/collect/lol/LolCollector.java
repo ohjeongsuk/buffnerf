@@ -54,13 +54,13 @@ class LolCollector implements PatchCollector {
 	private CollectedPatch withNote(String version, List<Change> changes) {
 		try {
 			var note = crawler.fetch(version);
-			return new CollectedPatch(version, note.title(), note.publishedAt(), note.content(), null, changes);
+			return new CollectedPatch(version, note.title(), note.publishedAt(), note.content(), null, changes, note.url());
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new IllegalStateException(e);
 		} catch (Exception e) {
 			return new CollectedPatch(version, "패치 " + PatchNoteCrawler.displayVersion(version), null, null,
-					e.toString(), changes);
+					e.toString(), changes, null);
 		}
 	}
 }

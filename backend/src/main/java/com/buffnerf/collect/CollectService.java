@@ -44,6 +44,7 @@ public class CollectService {
 		tx.executeWithoutResult(s -> {
 			for (var cp : collected) {
 				Patch p = new Patch(game, cp.version(), cp.title(), cp.publishedAt());
+				p.setSourceUrl(cp.sourceUrl());
 				if (cp.rawContent() != null) p.setContent(cp.rawContent(), Patch.ContentSource.CRAWLED);
 				else p.markContentFailed(cp.contentError());
 				patches.save(p);
