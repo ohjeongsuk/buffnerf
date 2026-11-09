@@ -34,11 +34,25 @@ class SteamCollectorsTests {
 		var patches = OverwatchCollector.parse(doc);
 		assertEquals(1, patches.size());
 		var p = patches.getFirst();
-		assertEquals("2026-11-03", p.version(), "중복 수집 기준은 게시일(KST)");
-		assertEquals(Instant.parse("2026-11-02T15:00:00Z"), p.publishedAt()); // KST 자정
+		assertEquals("2026-11-03", p.version(), "중복 수집 기준은 페이지 게시일(KST)");
+		assertEquals(Instant.parse("2026-11-03T15:00:00Z"), p.publishedAt(), "화면 날짜는 제목 날짜 11월 4일 KST 자정");
 		assertEquals("https://overwatch.blizzard.com/ko-kr/news/patch-notes/live/2026/11/", p.sourceUrl());
 		assertEquals("2026년 11월 4일 패치 노트", p.title());
 		assertTrue(p.rawContent().contains("트레이서\n펄스 쌍권총 피해량이 6에서 5로 감소합니다."), p.rawContent());
+	}
+
+	@Test
+	void overwatchSameDayHotfixIsKeptSeparately() {
+		// 페이지는 최신순: 같은 날 핫픽스가 위, 본 패치가 아래
+		var doc = Jsoup.parse("""
+				<div class="PatchNotes-patch"><div class="PatchNotes-date">2026년 11월 12일</div>
+				  <h3 class="PatchNotes-patchTitle">오버워치 핫픽스 - 2026년 11월 12일</h3><p>핫픽스</p></div>
+				<div class="PatchNotes-patch"><div class="PatchNotes-date">2026년 11월 12일</div>
+				  <h3 class="PatchNotes-patchTitle">오버워치 패치 노트 - 2026년 11월 12일</h3><p>본 패치</p></div>
+				<div class="PatchNotes-patch"><div class="PatchNotes-date">2026년 11월 5일</div>
+				  <h3 class="PatchNotes-patchTitle">오버워치 패치 노트 - 2026년 11월 6일</h3><p>지난 패치</p></div>""");
+		var versions = OverwatchCollector.parse(doc).stream().map(PatchCollector.CollectedPatch::version).toList();
+		assertEquals(List.of("2026-11-12-2", "2026-11-12", "2026-11-05"), versions, "오래된 글이 날짜, 같은 날 다음 글은 날짜-2");
 	}
 
 	@Test
@@ -49,7 +63,7 @@ class SteamCollectorsTests {
 		var sameDaySecond = new PatchCollector.CollectedPatch("2026-11-12", "2026년 11월 12일 패치 노트", null, "다른 글", null, List.of(), null);
 
 		var result = OverwatchCollector.newOnly(List.of(fresh, sameDaySecond, retitled), Set.of("2026-11-05"));
-		assertEquals(List.of(fresh), result, "저장된 날짜는 빼고, 같은 날짜가 두 번이면 최신 글 하나만");
+		assertEquals(List.of(fresh), result, "저장된 version은 빼고, 같은 version이 두 번이면 하나만");
 	}
 
 	@Test
