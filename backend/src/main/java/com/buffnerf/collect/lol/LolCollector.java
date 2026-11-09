@@ -50,16 +50,21 @@ class LolCollector implements PatchCollector {
 		return out;
 	}
 
+	/** 화면 제목 통일: "26.22 패치 노트" (사이트 제목은 "리그 오브 레전드 " 접두가 있다 없다 한다) */
+	static String title(String ddragonVersion) {
+		return PatchNoteCrawler.displayVersion(ddragonVersion) + " 패치 노트";
+	}
+
 	/** 원문 크롤링. 실패해도 패치는 저장하고 이유만 남긴다 (관리자가 수동 등록). */
 	private CollectedPatch withNote(String version, List<Change> changes) {
 		try {
 			var note = crawler.fetch(version);
-			return new CollectedPatch(version, note.title(), note.publishedAt(), note.content(), null, changes, note.url());
+			return new CollectedPatch(version, title(version), note.publishedAt(), note.content(), null, changes, note.url());
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new IllegalStateException(e);
 		} catch (Exception e) {
-			return new CollectedPatch(version, "패치 " + PatchNoteCrawler.displayVersion(version), null, null,
+			return new CollectedPatch(version, title(version), null, null,
 					e.toString(), changes, null);
 		}
 	}

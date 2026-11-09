@@ -68,5 +68,7 @@ public class CollectService {
 				log.warn("collect failed for {}: {}", g.getName(), e.toString());
 			}
 		}
+		// 새 패치가 없어도: 어제 한도(무료 등급 하루 20회)에 걸려 남은 패치를 이어서 처리
+		ai.processPendingAsync();
 	}
 }
