@@ -1,6 +1,6 @@
 # 배포 체크리스트 (AWS 서울 리전 ap-northeast-2)
 
-구성: Amplify(프론트) → EC2 t3.small(백엔드 :8080) → RDS PostgreSQL db.t4g.micro. 예상 월 약 $37.
+구성: Amplify(프론트) → HTTPS → EC2 t3.small(Caddy :443 → 백엔드 :8080) → RDS PostgreSQL db.t4g.micro. 예상 월 약 $37.
 
 ## 0. 예산 알림 (먼저)
 - [ ] Billing → Budgets → 월 예산 **$40**, 실제 비용 80%·100%에서 이메일 알림
@@ -18,7 +18,8 @@
 - [ ] 키 페어 새로 생성 → `.pem` 저장 (예: `~/.ssh/buffnerf.pem`)
 - [ ] 보안 그룹 인바운드:
   - SSH 22: **내 IP만**
-  - TCP 8080: 0.0.0.0/0 (Amplify 서버가 호출. 관리자 API는 `ADMIN_KEY`로 보호)
+  - TCP 80, 443: 0.0.0.0/0 (Caddy. 80은 인증서 발급·HTTPS 전환용)
+  - TCP 8080은 열지 않는다 (백엔드는 Caddy를 거쳐서만 받는다. 설치 직후 확인용으로 잠깐 열었다면 6번 뒤에 닫는다)
 - [ ] 탄력적 IP 할당 → 인스턴스에 연결 (재시작해도 주소 고정)
 
 ## 3. EC2 ↔ RDS 연결
@@ -39,7 +40,8 @@ deploy/deploy-backend.sh ec2-user@$IP $KEY     # "OK: 백엔드 응답"이 나�
 로컬에서 AI 처리한 결과를 그대로 옮긴다. 이후 AI 처리는 EC2가 매일 06:00에 이어서 한다.
 ```bash
 deploy/migrate-db.sh ec2-user@$IP $KEY <RDS 엔드포인트>
-curl http://$IP:8080/api/games     # 게임 3개가 나오면 성공
+deploy/setup-https.sh ec2-user@$IP $KEY       # Caddy 설치, https://<IP의 . 을 - 로>.sslip.io 인증서 자동 발급
+curl https://${IP//./-}.sslip.io/api/games     # 게임 3개가 나오면 성공
 ```
 - [ ] **로컬 백엔드는 끈다** (같은 Gemini 키의 하루 한도를 나눠 쓰지 않게)
 
@@ -47,7 +49,7 @@ curl http://$IP:8080/api/games     # 게임 3개가 나오면 성공
 - [ ] Amplify → 새 앱 → GitHub 연결 → 저장소 `ohjeongsuk/buffnerf`, 브랜치 `main`
 - [ ] "모노레포" 체크 → 루트 디렉터리 **`frontend`** (빌드 설정은 저장소의 `amplify.yml` 사용)
 - [ ] 환경 변수:
-  - `API_BASE` = `http://<탄력적 IP>:8080`
+  - `API_BASE` = `https://<탄력적 IP의 . 을 - 로>.sslip.io` (예: `https://13-125-179-206.sslip.io`)
   - `AMPLIFY_MONOREPO_APP_ROOT` = `frontend`
 - [ ] 배포 → 발급된 `https://main.xxxx.amplifyapp.com` 접속 확인
 
@@ -57,6 +59,6 @@ curl http://$IP:8080/api/games     # 게임 3개가 나오면 성공
 - [ ] 다음 날 06:00 이후 `sudo journalctl -u buffnerf --since today | grep -i "collected\|AI\|CommunityDragon"` 로 자동 수집·처리 확인 (CommunityDragon 경고가 있으면 롤 레벨당 공격력 비교가 빠진 것)
 
 ## 알려진 한계
-- Amplify 서버 → EC2 구간은 HTTP(암호화 안 됨). 관리자 키가 이 구간을 평문으로 지난다. 공개 서비스로 키우면 EC2 앞에 HTTPS(ALB 또는 Caddy+도메인)를 둔다.
+- HTTPS 도메인은 sslip.io(IP를 그대로 가리키는 무료 DNS)를 쓴다. 여러 사람이 같이 쓰는 도메인이라 Let's Encrypt 발급 한도에 걸릴 수 있다(Caddy가 시간을 두고 계속 재시도, 로그: `sudo journalctl -u caddy`). 자체 도메인을 사면 Caddyfile의 주소만 바꾼다.
 - 백엔드 재배포: `deploy/deploy-backend.sh ec2-user@$IP $KEY`
 - `Prompts.VERSION`을 올린 코드를 배포하면 RDS의 모든 패치가 미처리로 잡혀 06:00에 Gemini로 다시 처리된다 (무료 한도 초과, 기존 결과 덮어씀). 로컬에서 새 버전으로 이미 처리해 뒀다면 06:00 전에 `deploy/migrate-db.sh`(5번)로 로컬 DB를 먼저 옮기고 바로 이어서 재배포한다. migrate-db는 RDS를 로컬 내용으로 통째로 바꾸므로, RDS에만 있는 패치가 없는지 먼저 확인한다.
