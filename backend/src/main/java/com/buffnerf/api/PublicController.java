@@ -123,7 +123,9 @@ class PublicController {
 		}
 
 		private static int count(List<BalanceChange> cs, BalanceChange.ChangeType t) {
-			return (int) cs.stream().filter(c -> c.getChangeType() == t).map(BalanceChange::getCharacterName)
+			// "[클래식] …"처럼 다른 게임 모드의 변경은 세지 않는다 (패치 상세 화면의 기본 모드 집계와 같은 기준)
+			return (int) cs.stream().filter(c -> c.getChangeType() == t && !c.getAttribute().startsWith("["))
+					.map(BalanceChange::getCharacterName)
 					.distinct().count();
 		}
 	}

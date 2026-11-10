@@ -22,6 +22,8 @@ final class StatDiff {
 				Double before = p.stats().get(e.getKey());
 				Double after = e.getValue();
 				if (before == null || after == null || before.equals(after)) continue;
+				// Data Dragon이 항목을 더는 채우지 않으면 전 챔피언이 0이 된다 (16.5.1의 attackdamageperlevel). 실제 변경이 아니다
+				if (after == 0 && curr.values().stream().allMatch(x -> Double.valueOf(0).equals(x.stats().get(e.getKey())))) continue;
 				// 기본 스탯은 모두 값이 클수록 유리
 				ChangeType type = after > before ? ChangeType.BUFF : ChangeType.NERF;
 				out.add(new Change(c.id(), e.getKey(), type, fmt(before), fmt(after), evidence));

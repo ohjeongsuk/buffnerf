@@ -14,7 +14,8 @@ public interface PatchCollector {
 
 	/**
 	 * 아직 저장되지 않은 패치를 오래된 순으로 돌려준다.
-	 * @param knownVersions 이미 저장된 버전 (다시 받지 않는다)
+	 * 이미 저장된 버전을 함께 돌려주면 그 패치는 제목·게시일만 갱신된다 (원문·AI 결과는 그대로).
+	 * @param knownVersions 이미 저장된 버전
 	 */
 	List<CollectedPatch> collect(Game game, Set<String> knownVersions);
 

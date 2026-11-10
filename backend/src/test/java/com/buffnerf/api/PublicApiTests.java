@@ -37,6 +37,8 @@ class PublicApiTests {
 		changes.save(new BalanceChange(p1, "재키", "방어력", ChangeType.BUFF, "20", "21", "방어력 20 → 21", Source.AI));
 		changes.save(new BalanceChange(p2, "재키", "공격력", ChangeType.NERF, "32", "31", "공격력 32 → 31", Source.AI));
 		changes.save(new BalanceChange(p2, "아야", "체력", ChangeType.NERF, "700", "680", "체력 700 → 680", Source.AI));
+		// 다른 게임 모드 변경은 목록의 상향·하향 수에 넣지 않는다
+		changes.save(new BalanceChange(p2, "얀", "[아레나] 체력", ChangeType.NERF, "700", "680", "체력 700 → 680", Source.AI));
 		MockMvc mvc = MockMvcBuilders.webAppContextSetup(ctx).build();
 
 		mvc.perform(get("/api/games")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(3));
