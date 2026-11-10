@@ -1,10 +1,13 @@
 package com.buffnerf.collect.lol;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +15,11 @@ import java.util.Map;
 @Component
 class DataDragonClient {
 
+	private static final Logger log = LoggerFactory.getLogger(DataDragonClient.class);
+
 	static final String AD_PER_LEVEL = "attackdamageperlevel";
+	/** 이보다 많은 챔피언의 값을 못 구하면 CommunityDragon 파일 구조가 바뀐 것으로 보고 경고 (세나는 원래 항목이 없다) */
+	static final int MISSING_WARN = 5;
 
 	private final RestClient http;
 	private final RestClient cdragon;
@@ -44,6 +51,7 @@ class DataDragonClient {
 		if (data.values().stream().anyMatch(c -> !Double.valueOf(0).equals(c.stats().get(AD_PER_LEVEL)))) return data;
 		String patch = version.replaceFirst("^(\\d+\\.\\d+)\\..*", "$1"); // 16.22.1 → 16.22
 		Map<String, Champion> out = new HashMap<>();
+		List<String> missing = new ArrayList<>();
 		for (Champion c : data.values()) {
 			Map<String, Double> stats = new HashMap<>(c.stats());
 			Double v = null;
@@ -54,21 +62,26 @@ class DataDragonClient {
 			} catch (RuntimeException e) {
 				// 한 챔피언 실패로 수집 전체를 멈추지 않는다
 			}
-			if (v == null) stats.remove(AD_PER_LEVEL);
-			else stats.put(AD_PER_LEVEL, v);
+			if (v == null) {
+				stats.remove(AD_PER_LEVEL);
+				missing.add(c.id());
+			} else stats.put(AD_PER_LEVEL, v);
 			out.put(c.id(), new Champion(c.id(), c.name(), stats));
 		}
+		if (missing.size() > MISSING_WARN)
+			log.warn("CommunityDragon {}: 레벨당 공격력을 {}/{}명 못 구해 비교에서 뺐다. 파일 구조 확인 필요: {}",
+					patch, missing.size(), data.size(), missing);
 		return out;
 	}
 
-	/** CommunityDragon 챔피언 파일에서 레벨당 공격력. 기록은 있는데 항목이 없으면 0 (세나), 기록을 못 찾으면 null */
+	/** CommunityDragon 챔피언 파일에서 레벨당 공격력. 기록이나 항목을 못 찾으면 null (구조가 바뀌어도 0으로 오인하지 않게) */
 	static Double adPerLevel(JsonNode file) {
 		if (file == null) return null;
 		for (var e : file.properties()) {
 			if (!e.getKey().endsWith("/CharacterRecords/Root")) continue;
 			JsonNode v = e.getValue().path("damagePerLevelModifiable").path("baseValue");
 			if (v.isMissingNode()) v = e.getValue().path("damagePerLevel"); // 16.4 이전 형식
-			return v.isNumber() ? Math.round(v.asDouble() * 10000) / 10000.0 : 0.0; // 3.4000000953 → 3.4
+			return v.isNumber() ? Math.round(v.asDouble() * 10000) / 10000.0 : null; // 3.4000000953 → 3.4
 		}
 		return null;
 	}

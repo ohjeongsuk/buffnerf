@@ -54,7 +54,7 @@ curl http://$IP:8080/api/games     # 게임 3개가 나오면 성공
 ## 7. 확인
 - [ ] 홈에 게임 3개, 패치 목록, 패치 상세(AI 요약, 원문 링크), 캐릭터 타임라인
 - [ ] `/admin`에서 관리자 키로 원문 대기 목록 조회
-- [ ] 다음 날 06:00 이후 `sudo journalctl -u buffnerf --since today | grep -i "collected\|AI"` 로 자동 수집·처리 확인
+- [ ] 다음 날 06:00 이후 `sudo journalctl -u buffnerf --since today | grep -i "collected\|AI\|CommunityDragon"` 로 자동 수집·처리 확인 (CommunityDragon 경고가 있으면 롤 레벨당 공격력 비교가 빠진 것)
 
 ## 알려진 한계
 - Amplify 서버 → EC2 구간은 HTTP(암호화 안 됨). 관리자 키가 이 구간을 평문으로 지난다. 공개 서비스로 키우면 EC2 앞에 HTTPS(ALB 또는 Caddy+도메인)를 둔다.
