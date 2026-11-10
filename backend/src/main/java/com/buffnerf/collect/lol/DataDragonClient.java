@@ -43,8 +43,18 @@ class DataDragonClient {
 
 	/** 챔피언 영문 ID → 챔피언 (한국어 이름, 기본 스탯) */
 	Map<String, Champion> champions(String version) {
-		return http.get().uri("/cdn/{v}/data/ko_KR/champion.json", version)
-				.retrieve().body(ChampionFile.class).data();
+		return real(http.get().uri("/cdn/{v}/data/ko_KR/champion.json", version)
+				.retrieve().body(ChampionFile.class).data());
+	}
+
+	/**
+	 * 16.15.1에는 이벤트 모드용 복제 챔피언 60개(Jade_Ahri 등)가 진짜와 같은 한국어 이름으로 섞여 있다.
+	 * 그대로 두면 "아리"가 Jade_Ahri로 연결된다. 진짜 ID는 영문·숫자뿐이라 그것만 남긴다.
+	 */
+	static Map<String, Champion> real(Map<String, Champion> data) {
+		Map<String, Champion> out = new HashMap<>(data);
+		out.keySet().removeIf(id -> !id.matches("[A-Za-z0-9]+"));
+		return out;
 	}
 
 	/**

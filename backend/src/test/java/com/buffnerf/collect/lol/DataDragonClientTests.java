@@ -3,6 +3,8 @@ package com.buffnerf.collect.lol;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -10,6 +12,15 @@ class DataDragonClientTests {
 
 	private static Double parse(String json) {
 		return DataDragonClient.adPerLevel(JsonMapper.builder().build().readTree(json));
+	}
+
+	@Test
+	void dropsCloneChampionsSharingKoreanName() {
+		var ahri = new DataDragonClient.Champion("Ahri", "아리", Map.of());
+		var clone = new DataDragonClient.Champion("Jade_Ahri", "아리", Map.of());
+		var data = DataDragonClient.real(Map.of("Ahri", ahri, "Jade_Ahri", clone));
+		assertEquals(Map.of("Ahri", ahri), data);
+		assertEquals("Ahri", ChampionKeys.index(data).get("아리"));
 	}
 
 	@Test
