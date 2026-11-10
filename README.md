@@ -50,7 +50,7 @@
 | 오버워치 | overwatch.blizzard.com/ko-kr 패치노트 (월별 페이지) | - |
 | 이터널 리턴 | playeternalreturn.com 패치노트 글 | Steam News API (새 패치 글 링크 찾기) |
 
-## 결과 (로컬 수집 기준, 2026-11-09)
+## 결과 (운영 DB 기준, 2026-11-10)
 
 **자동 수집 성공률:** 51개 패치 모두 크롤링으로 원문 확보 (CRAWLED 51, MANUAL 0, 원문 대기 0)
 
@@ -60,7 +60,7 @@
 | 오버워치 | 19 | 19 |
 | 이터널 리턴 | 12 | 12 |
 
-**AI 추출 정확도 (롤 기본 스탯, Data Dragon·CommunityDragon diff 기준, 2026-11-10 운영 DB):**
+**AI 추출 정확도 (롤 기본 스탯, Data Dragon·CommunityDragon diff 기준):**
 
 현재 DB의 추출 결과는 Gemini 무료 한도(하루 20회) 때문에 Claude(`claude-fable-5-2`)가 Claude Code 세션에서 같은 프롬프트 규칙으로 직접 처리한 것입니다.
 
