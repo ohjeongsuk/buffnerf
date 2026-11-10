@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
@@ -25,8 +26,10 @@ class DataDragonClient {
 
 	private final RestClient http;
 	private final RestClient cdragon;
+	private final JdbcClient db;
 
-	DataDragonClient() {
+	DataDragonClient(JdbcClient db) {
+		this.db = db;
 		// 응답이 멈춘 요청 하나가 수집 전체를 붙잡지 않게 (기본값은 무제한)
 		var factory = new SimpleClientHttpRequestFactory();
 		factory.setConnectTimeout(Duration.ofSeconds(15));
@@ -60,23 +63,35 @@ class DataDragonClient {
 	/**
 	 * 스탯 비교용. Data Dragon은 16.5.1부터 레벨당 공격력을 전 챔피언 0으로 준다.
 	 * 그럴 때만 그 값을 CommunityDragon(게임 데이터 원본)에서 채운다. 못 구한 챔피언은 그 항목을 비교에서 뺀다.
+	 * 받은 값은 DB에 저장해 같은 버전은 다시 받지 않는다 (이전 버전 비교, rediff, CommunityDragon이 옛 폴더를 지워도 유지).
 	 */
-	// ponytail: 챔피언마다 요청 1번(새 패치 하나에 이전·새 버전 합쳐 약 700번, 2주에 한 번). 느려지면 병렬로 바꾼다.
+	// ponytail: 저장 안 된 챔피언마다 요청 1번(새 버전 하나에 약 170번, 2주에 한 번). 느려지면 병렬로 바꾼다.
 	Map<String, Champion> championsForDiff(String version) {
-		var data = champions(version);
+		return withAdPerLevel(version, champions(version));
+	}
+
+	Map<String, Champion> withAdPerLevel(String version, Map<String, Champion> data) {
 		if (data.values().stream().anyMatch(c -> !Double.valueOf(0).equals(c.stats().get(AD_PER_LEVEL)))) return data;
 		String patch = version.replaceFirst("^(\\d+\\.\\d+)\\..*", "$1"); // 16.22.1 → 16.22
+		Map<String, Double> stored = new HashMap<>();
+		db.sql("select champion, value from champion_ad_per_level where version = ?").param(version)
+				.query((rs, i) -> stored.put(rs.getString(1), rs.getDouble(2))).list();
 		Map<String, Champion> out = new HashMap<>();
 		List<String> missing = new ArrayList<>();
 		for (Champion c : data.values()) {
 			Map<String, Double> stats = new HashMap<>(c.stats());
-			Double v = null;
-			try {
-				String id = c.id().toLowerCase();
-				v = adPerLevel(cdragon.get().uri("/{p}/game/data/characters/{id}/{id}.bin.json", patch, id, id)
-						.retrieve().body(JsonNode.class));
-			} catch (RuntimeException e) {
-				// 한 챔피언 실패로 수집 전체를 멈추지 않는다
+			Double v = stored.get(c.id());
+			if (v == null) {
+				try {
+					String id = c.id().toLowerCase();
+					v = adPerLevel(cdragon.get().uri("/{p}/game/data/characters/{id}/{id}.bin.json", patch, id, id)
+							.retrieve().body(JsonNode.class));
+				} catch (RuntimeException e) {
+					// 한 챔피언 실패로 수집 전체를 멈추지 않는다
+				}
+				if (v != null)
+					db.sql("insert into champion_ad_per_level (version, champion, value) values (?, ?, ?) on conflict do nothing")
+							.params(version, c.id(), v).update();
 			}
 			if (v == null) {
 				stats.remove(AD_PER_LEVEL);
