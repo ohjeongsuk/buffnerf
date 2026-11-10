@@ -11,7 +11,15 @@ export function Badge({ type }: { type: ChangeType }) {
   return <span className={`inline-block shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold ${b.cls}`}>{b.label}</span>;
 }
 
-/** 변경 한 줄: 배지, 항목, 전→후, 근거 문장(펼치기) */
+/** 근거 문장이 위에 보이는 "항목 전 → 후"와 같은 내용이면 true (예: "피해량: 75 ⇒ 80"). 문장형 근거는 false */
+function repeatsRow(c: Change): boolean {
+  if (!c.evidence || !c.before || !c.after) return false;
+  const sq = (s: string) => s.replace(/\s+/g, "");
+  const rest = sq(c.evidence).replace(sq(c.before), "").replace(sq(c.after), "").replace(/[→⇒:>-]/g, "");
+  return sq(attributeLabel(c.attribute)).includes(rest);
+}
+
+/** 변경 한 줄: 배지, 항목, 전→후, 근거 문장(펼치기, 위 내용과 겹치면 생략) */
 export function ChangeRow({ c }: { c: Change }) {
   return (
     <li className="py-2">
@@ -24,7 +32,7 @@ export function ChangeRow({ c }: { c: Change }) {
           </span>
         )}
       </div>
-      {c.evidence && (
+      {c.evidence && !repeatsRow(c) && (
         <details className="mt-1 text-sm">
           <summary className="cursor-pointer text-neutral-500">{c.source === "AI" ? "원문 근거" : "출처"}</summary>
           <p className="mt-1 rounded bg-neutral-100 p-2 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
