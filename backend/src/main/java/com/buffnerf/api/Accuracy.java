@@ -19,7 +19,10 @@ record Accuracy(int matched, int diffCount, int aiCount, Double recall, Double p
 
 	/** AI 결과가 아직 없으면 null */
 	static Accuracy of(List<BalanceChange> changes) {
-		var diff = changes.stream().filter(c -> c.getSource() == BalanceChange.Source.DIFF).toList();
+		// 스킬 diff(F10)는 AI 항목명과 형식이 달라 맞춰 볼 수 없으므로 기본 스탯만 비교
+		var diff = changes.stream()
+				.filter(c -> c.getSource() == BalanceChange.Source.DIFF && STAT_KEYS.contains(c.getAttribute()))
+				.toList();
 		var ai = changes.stream()
 				.filter(c -> c.getSource() == BalanceChange.Source.AI && STAT_KEYS.contains(c.getAttribute()))
 				.toList();

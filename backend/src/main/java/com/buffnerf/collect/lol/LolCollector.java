@@ -2,13 +2,14 @@ package com.buffnerf.collect.lol;
 
 import com.buffnerf.collect.PatchCollector;
 import com.buffnerf.collect.lol.DataDragonClient.Champion;
+import com.buffnerf.collect.lol.DataDragonClient.Spell;
 import com.buffnerf.collect.PatchCollector.Change;
 import com.buffnerf.domain.Game;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-/** 롤: Data Dragon 버전 목록 + 버전 간 기본 스탯 diff (F1, F2) + 공식 패치노트 원문 (F1-b) */
+/** 롤: Data Dragon 버전 목록 + 버전 간 기본 스탯·스킬 diff (F1, F2, F10) + 공식 패치노트 원문 (F1-b) */
 @Component
 class LolCollector implements PatchCollector {
 
@@ -36,15 +37,19 @@ class LolCollector implements PatchCollector {
 				.toList();
 
 		Map<String, Map<String, Champion>> cache = new HashMap<>();
+		Map<String, Map<String, List<Spell>>> spellCache = new HashMap<>();
 		List<CollectedPatch> out = new ArrayList<>();
 		for (int i = versions.size() - 2; i >= 0; i--) {
 			String v = versions.get(i);
 			if (knownVersions.contains(v)) continue;
 			String prev = versions.get(i + 1);
-			var changes = StatDiff.diff(
+			String evidence = "Data Dragon " + prev + " → " + v;
+			var changes = new ArrayList<>(StatDiff.diff(
 					cache.computeIfAbsent(prev, dataDragon::championsForDiff),
-					cache.computeIfAbsent(v, dataDragon::championsForDiff),
-					"Data Dragon " + prev + " → " + v);
+					cache.computeIfAbsent(v, dataDragon::championsForDiff), evidence));
+			changes.addAll(StatDiff.skills(
+					spellCache.computeIfAbsent(prev, dataDragon::spells),
+					spellCache.computeIfAbsent(v, dataDragon::spells), evidence));
 			out.add(withNote(v, changes));
 		}
 		return out;

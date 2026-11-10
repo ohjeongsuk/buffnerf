@@ -79,7 +79,7 @@ export default async function PatchPage({ params }: { params: Promise<{ patchId:
 
       <h2 className="mb-2 text-lg font-semibold">캐릭터별 변경</h2>
       {changes.length > 0 && changes[0].source === "DIFF" && (
-        <p className="mb-2 text-sm text-neutral-500">AI 추출 전이라 Data Dragon 기본 스탯 비교 결과를 보여줍니다.</p>
+        <p className="mb-2 text-sm text-neutral-500">AI 추출 전이라 Data Dragon 비교 결과(기본 스탯, 스킬 재사용 대기시간·소모량)를 보여줍니다.</p>
       )}
       {changes.length === 0 && <Empty>캐릭터 밸런스 변경이 없습니다.</Empty>}
 

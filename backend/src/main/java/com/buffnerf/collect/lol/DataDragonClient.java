@@ -56,8 +56,12 @@ class DataDragonClient {
 	 */
 	static Map<String, Champion> real(Map<String, Champion> data) {
 		Map<String, Champion> out = new HashMap<>(data);
-		out.keySet().removeIf(id -> !id.matches("[A-Za-z0-9]+"));
+		out.keySet().removeIf(id -> !isReal(id));
 		return out;
+	}
+
+	static boolean isReal(String id) {
+		return id.matches("[A-Za-z0-9]+");
 	}
 
 	/**
@@ -117,7 +121,25 @@ class DataDragonClient {
 		return null;
 	}
 
+	/** F10: 챔피언 영문 ID → 스킬 Q·W·E·R (재사용 대기시간, 소모량). 피해량은 Data Dragon이 0으로 비워 둬서 없다 */
+	Map<String, List<Spell>> spells(String version) {
+		Map<String, List<Spell>> out = new HashMap<>();
+		http.get().uri("/cdn/{v}/data/ko_KR/championFull.json", version).retrieve().body(FullFile.class).data()
+				.forEach((id, c) -> out.put(id, c.spells()));
+		out.keySet().removeIf(id -> !isReal(id));
+		return out;
+	}
+
 	record ChampionFile(Map<String, Champion> data) {
+	}
+
+	record FullFile(Map<String, FullChampion> data) {
+	}
+
+	record FullChampion(List<Spell> spells) {
+	}
+
+	record Spell(String id, String name, List<Double> cooldown, List<Double> cost) {
 	}
 
 	record Champion(String id, String name, Map<String, Double> stats) {
