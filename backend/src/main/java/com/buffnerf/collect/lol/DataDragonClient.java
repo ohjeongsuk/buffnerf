@@ -3,10 +3,12 @@ package com.buffnerf.collect.lol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +27,12 @@ class DataDragonClient {
 	private final RestClient cdragon;
 
 	DataDragonClient() {
-		this.http = RestClient.create("https://ddragon.leagueoflegends.com");
-		this.cdragon = RestClient.create("https://raw.communitydragon.org");
+		// 응답이 멈춘 요청 하나가 수집 전체를 붙잡지 않게 (기본값은 무제한)
+		var factory = new SimpleClientHttpRequestFactory();
+		factory.setConnectTimeout(Duration.ofSeconds(15));
+		factory.setReadTimeout(Duration.ofSeconds(15));
+		this.http = RestClient.builder().requestFactory(factory).baseUrl("https://ddragon.leagueoflegends.com").build();
+		this.cdragon = RestClient.builder().requestFactory(factory).baseUrl("https://raw.communitydragon.org").build();
 	}
 
 	/** 최신순 버전 목록 */
@@ -45,7 +51,7 @@ class DataDragonClient {
 	 * 스탯 비교용. Data Dragon은 16.5.1부터 레벨당 공격력을 전 챔피언 0으로 준다.
 	 * 그럴 때만 그 값을 CommunityDragon(게임 데이터 원본)에서 채운다. 못 구한 챔피언은 그 항목을 비교에서 뺀다.
 	 */
-	// ponytail: 챔피언마다 요청 1번(새 패치 하나에 약 350번, 2주에 한 번). 느려지면 병렬로 바꾼다.
+	// ponytail: 챔피언마다 요청 1번(새 패치 하나에 이전·새 버전 합쳐 약 700번, 2주에 한 번). 느려지면 병렬로 바꾼다.
 	Map<String, Champion> championsForDiff(String version) {
 		var data = champions(version);
 		if (data.values().stream().anyMatch(c -> !Double.valueOf(0).equals(c.stats().get(AD_PER_LEVEL)))) return data;
