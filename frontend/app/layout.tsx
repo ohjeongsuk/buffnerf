@@ -20,9 +20,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Link href="/" className="text-lg font-bold">
               <span className="text-emerald-600">Buff</span>Log
             </Link>
-            <Link href="/admin" className="text-sm text-neutral-500 hover:underline">
-              관리자
-            </Link>
+            {/* 관리자 화면(/admin)은 링크를 두지 않는다. 주소를 직접 입력 */}
           </nav>
         </header>
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">{children}</main>
