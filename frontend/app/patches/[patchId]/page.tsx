@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { api, fmtDate, gameColor, shown, verdict, type Accuracy, type Change, type ChangeType, type Page, type PatchDetail, type PatchSummary } from "@/lib/api";
+import { api, fmtDate, gameColor, shown, verdict, type Change, type ChangeType, type Page, type PatchDetail, type PatchSummary } from "@/lib/api";
 import { Badge, ChangeRow, Empty } from "../../components";
 
 const ORDER: Record<ChangeType, number> = { BUFF: 0, NERF: 1, ADJUST: 2 };
@@ -10,7 +10,7 @@ const GROUP: { type: ChangeType; label: string; cls: string }[] = [
   { type: "ADJUST", label: "조정", cls: "border-amber-300 text-amber-800 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950" },
 ];
 
-/** 패치 상세: AI 3줄 요약, 상향·하향 집계와 바로가기, 캐릭터별 변경, 근거 문장, 롤 AI 정확도 (F3, F4, F5, F8) */
+/** 패치 상세: AI 3줄 요약, 상향·하향 집계와 바로가기, 캐릭터별 변경, 근거 문장 (F3, F4, F5) */
 export default async function PatchPage({ params }: { params: Promise<{ patchId: string }> }) {
   const { patchId } = await params;
   const p = await api<PatchDetail>(`/api/patches/${patchId}`);
@@ -22,12 +22,21 @@ export default async function PatchPage({ params }: { params: Promise<{ patchId:
   const older = at >= 0 ? list[at + 1] : undefined;
 
   const changes = shown(p.changes);
-  const characters = [...Map.groupBy(changes, (c) => c.characterKey).values()]
-    .map((cs) => ({ cs, v: verdict(cs) }))
-    .sort((a, b) => ORDER[a.v] - ORDER[b.v] || a.cs[0].characterName.localeCompare(b.cs[0].characterName, "ko"));
+  const characters = byCharacter(changes);
   // 목록 화면(▲▼)과 같은 기준: 상향이 하나라도 있는 캐릭터, 하향이 하나라도 있는 캐릭터
   const buffs = characters.filter((x) => x.cs.some((c) => c.changeType === "BUFF")).length;
   const nerfs = characters.filter((x) => x.cs.some((c) => c.changeType === "NERF")).length;
+  // 게임 모드별 묶음: 항목이 "[클래식] …"처럼 시작하면 그 모드, 아니면 기본 모드(""). 기본 모드가 맨 앞
+  const modes = [...Map.groupBy(changes, (c) => /^\[([^\]]+)\]/.exec(c.attribute)?.[1] ?? "").entries()]
+    .sort(([a], [b]) => (a === "" ? -1 : b === "" ? 1 : a.localeCompare(b, "ko")))
+    .map(([mode, cs], m) => ({
+      mode,
+      m,
+      // 묶음 제목에 모드가 있으니 항목에서는 뗀다
+      characters: byCharacter(mode ? cs.map((c) => ({ ...c, attribute: c.attribute.slice(mode.length + 2).trimStart() })) : cs),
+    }));
+  const split = modes.some((x) => x.mode !== "");
+  const modeLabel = (mode: string) => mode || (p.gameName === "League of Legends" ? "소환사의 협곡" : "기본");
 
   return (
     <>
@@ -68,41 +77,51 @@ export default async function PatchPage({ params }: { params: Promise<{ patchId:
         )}
       </section>
 
-      {p.accuracy && <AccuracyBox a={p.accuracy} />}
-
       <h2 className="mb-2 text-lg font-semibold">캐릭터별 변경</h2>
       {changes.length > 0 && changes[0].source === "DIFF" && (
         <p className="mb-2 text-sm text-neutral-500">AI 추출 전이라 Data Dragon 기본 스탯 비교 결과를 보여줍니다.</p>
       )}
       {changes.length === 0 && <Empty>캐릭터 밸런스 변경이 없습니다.</Empty>}
 
-      {/* 판정별 바로가기: 누르면 해당 캐릭터 카드로 이동 */}
-      {characters.length > 0 && (
-        <nav aria-label="캐릭터 바로가기" className="mb-4 space-y-2">
-          {GROUP.map((g) => {
-            const members = characters.map((x, i) => ({ ...x, i })).filter((x) => x.v === g.type);
-            if (members.length === 0) return null;
-            return (
-              <div key={g.type} className="flex flex-wrap items-baseline gap-1.5">
-                <span className="mr-1 w-14 shrink-0 text-sm font-semibold text-neutral-500">
-                  {g.label} {members.length}
-                </span>
-                {members.map((x) => (
-                  <a key={x.i} href={`#c-${x.i}`} className={`rounded-full border px-2.5 py-0.5 text-sm ${g.cls}`}>
-                    {x.cs[0].characterName}
-                  </a>
-                ))}
-              </div>
-            );
-          })}
+      {split && (
+        <nav aria-label="게임 모드 바로가기" className="mb-4 flex flex-wrap gap-1.5">
+          {modes.map((x) => (
+            <a key={x.m} href={`#m-${x.m}`} className="rounded-full border border-neutral-300 px-3 py-1 text-sm font-medium hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900">
+              {modeLabel(x.mode)} {x.characters.length}
+            </a>
+          ))}
         </nav>
       )}
 
-      <div className="space-y-4">
-        {characters.map((x, i) => (
-          <CharacterCard key={i} id={`c-${i}`} gameId={p.gameId} cs={x.cs} v={x.v} />
-        ))}
-      </div>
+      {modes.map(({ mode, m, characters }) => (
+        <section key={m} id={`m-${m}`} className="mb-8 scroll-mt-4">
+          {split && <h3 className="mb-2 border-b border-neutral-200 pb-1 font-semibold dark:border-neutral-800">{modeLabel(mode)}</h3>}
+          {/* 판정별 바로가기: 누르면 해당 캐릭터 카드로 이동 */}
+          <nav aria-label={`${modeLabel(mode)} 캐릭터 바로가기`} className="mb-4 space-y-2">
+            {GROUP.map((g) => {
+              const members = characters.map((x, i) => ({ ...x, i })).filter((x) => x.v === g.type);
+              if (members.length === 0) return null;
+              return (
+                <div key={g.type} className="flex flex-wrap items-baseline gap-1.5">
+                  <span className="mr-1 w-14 shrink-0 text-sm font-semibold text-neutral-500">
+                    {g.label} {members.length}
+                  </span>
+                  {members.map((x) => (
+                    <a key={x.i} href={`#c-${m}-${x.i}`} className={`rounded-full border px-2.5 py-0.5 text-sm ${g.cls}`}>
+                      {x.cs[0].characterName}
+                    </a>
+                  ))}
+                </div>
+              );
+            })}
+          </nav>
+          <div className="space-y-4">
+            {characters.map((x, i) => (
+              <CharacterCard key={i} id={`c-${m}-${i}`} gameId={p.gameId} cs={x.cs} v={x.v} />
+            ))}
+          </div>
+        </section>
+      ))}
 
       {(newer || older) && (
         <nav aria-label="다른 패치" className="mt-8 grid grid-cols-2 gap-3 text-sm">
@@ -122,6 +141,13 @@ export default async function PatchPage({ params }: { params: Promise<{ patchId:
       )}
     </>
   );
+}
+
+/** 캐릭터별로 묶어 상향 → 하향 → 조정, 이름순 */
+function byCharacter(changes: Change[]) {
+  return [...Map.groupBy(changes, (c) => c.characterKey).values()]
+    .map((cs) => ({ cs, v: verdict(cs) }))
+    .sort((a, b) => ORDER[a.v] - ORDER[b.v] || a.cs[0].characterName.localeCompare(b.cs[0].characterName, "ko"));
 }
 
 function Stat({ label, value, cls = "" }: { label: string; value: string; cls?: string }) {
@@ -147,27 +173,6 @@ function CharacterCard({ id, gameId, cs, v }: { id: string; gameId: number; cs: 
       <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">
         {cs.map((x, i) => <ChangeRow key={i} c={x} />)}
       </ul>
-    </section>
-  );
-}
-
-function AccuracyBox({ a }: { a: Accuracy }) {
-  const pct = (v: number | null) => (v == null ? "—" : `${Math.round(v * 100)}%`);
-  return (
-    <section className="mb-6 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-      <h2 className="mb-2 text-sm font-semibold text-neutral-500">AI 추출 정확도 (기본 스탯, Data Dragon 기준)</h2>
-      <dl className="grid grid-cols-2 gap-2 text-center">
-        <div>
-          <dt className="text-xs text-neutral-500">재현율 — 실제 변경 중 AI가 찾은 비율</dt>
-          <dd className="text-2xl font-bold">{pct(a.recall)}</dd>
-          <dd className="text-xs text-neutral-400">{a.matched} / {a.diffCount}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-neutral-500">정밀도 — AI가 뽑은 변경 중 맞은 비율</dt>
-          <dd className="text-2xl font-bold">{pct(a.precision)}</dd>
-          <dd className="text-xs text-neutral-400">{a.matched} / {a.aiCount}</dd>
-        </div>
-      </dl>
     </section>
   );
 }

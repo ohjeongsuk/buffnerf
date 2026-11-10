@@ -59,3 +59,4 @@ curl http://$IP:8080/api/games     # 게임 3개가 나오면 성공
 ## 알려진 한계
 - Amplify 서버 → EC2 구간은 HTTP(암호화 안 됨). 관리자 키가 이 구간을 평문으로 지난다. 공개 서비스로 키우면 EC2 앞에 HTTPS(ALB 또는 Caddy+도메인)를 둔다.
 - 백엔드 재배포: `deploy/deploy-backend.sh ec2-user@$IP $KEY`
+- `Prompts.VERSION`을 올린 코드를 배포하면 RDS의 모든 패치가 미처리로 잡혀 06:00에 Gemini로 다시 처리된다 (무료 한도 초과, 기존 결과 덮어씀). 로컬에서 새 버전으로 이미 처리해 뒀다면 06:00 전에 `deploy/migrate-db.sh`(5번)로 로컬 DB를 먼저 옮기고 바로 이어서 재배포한다. migrate-db는 RDS를 로컬 내용으로 통째로 바꾸므로, RDS에만 있는 패치가 없는지 먼저 확인한다.

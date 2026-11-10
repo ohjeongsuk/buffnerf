@@ -10,7 +10,7 @@ import java.util.List;
 /** 프롬프트를 바꾸면 VERSION을 올린다 (AiRun 재호출 방지 기준). */
 final class Prompts {
 
-	static final String VERSION = "v2"; // v2: 기본 모델을 Gemini 무료 등급으로 변경
+	static final String VERSION = "v3"; // v3: 롤 다른 모드(클래식·아레나·무작위 총력전) 변경에 "[모드] " 표기
 
 	private Prompts() {
 	}
@@ -68,5 +68,9 @@ final class Prompts {
 			  attackspeed(기본 공격 속도) attackspeedperlevel(레벨당 공격 속도)
 			  예: "체력: 640 + 레벨당 99 ⇒ 590 + 레벨당 107" → hp 640→590, hpperlevel 99→107 두 건.
 			- 스킬 변경은 attribute를 "Q - 스킬명: 항목" 형식으로, before/after는 원문 값 그대로.
+			- 소환사의 협곡이 아닌 모드(LoL 클래식, 아레나, 무작위 총력전)의 챔피언 변경은 attribute 맨 앞에
+			  "[클래식] ", "[아레나] ", "[무작위 총력전] "을 붙인다 (화면에서 모드별로 묶는 기준).
+			  이 경우 기본 능력치도 위 키를 쓰지 않고 원문 항목 이름과 값을 그대로 쓴다.
+			  예: "[클래식] Q - 스킬명: 피해량", "[아레나] 기본 체력".
 			""";
 }
