@@ -122,7 +122,6 @@ cd frontend && npm install && npm run dev
 | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | PostgreSQL 접속 정보 |
 | `LLM_PROVIDER` | `gemini`(기본) / `ollama` / `claude` |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | Gemini 키, 모델 (기본 `gemini-3.5-flash`) |
-| `OLLAMA_URL` | 로컬 Ollama 주소 (`LLM_PROVIDER=ollama`일 때) |
 | `ANTHROPIC_API_KEY` | Claude 키 (`LLM_PROVIDER=claude`일 때) |
 | `STEAM_API_KEY` | 현재 미사용 (Steam News API는 키 없이 호출) |
 | `ADMIN_KEY` | 관리자 화면·API 보호 키 (요청 헤더 `X-Admin-Key`) |
