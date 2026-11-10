@@ -12,13 +12,20 @@ export function Badge({ type }: { type: ChangeType }) {
 }
 
 /**
- * 근거가 "이름: 전 ⇒ 후" 한 줄이고 전·후 말고 다른 숫자가 없으면 위 줄과 같은 내용이라 true
+ * 근거가 위 줄(항목, 전 → 후)에 없는 정보를 담지 않으면 true. 두 경우:
+ * 1) "이름: 전 ⇒ 후" 한 줄이고 전·후 말고 다른 숫자가 없음
  * (예: "체력 증가량: 레벨당 100 ⇒ 레벨당 105"). 문장형 근거나 "체력: 550 + 레벨당 103 ⇒ …"처럼 수치가 더 있으면 false
  */
 function repeatsRow(c: Change): boolean {
-  if (!c.evidence || !c.before || !c.after || !/[→⇒]/.test(c.evidence)) return false;
+  if (!c.evidence) return false;
   const sq = (s: string) => s.replace(/\s+/g, "");
-  return !/\d/.test(sq(c.evidence).replace(sq(c.before), "").replace(sq(c.after), ""));
+  if (c.before && c.after && /[→⇒]/.test(c.evidence) && !/\d/.test(sq(c.evidence).replace(sq(c.before), "").replace(sq(c.after), "")))
+    return true;
+  // 캐릭터 이름·전·후를 빼고 남은 글자가 항목명 안에 다 있으면 새 정보가 없다 (예: "신규 - 볼리베어", "재사용 대기시간: 10/9/8초")
+  const sym = (s: string) => s.replace(/[[\]()\-:·,./→⇒>]/g, "");
+  let rest = sq(c.evidence);
+  for (const x of [c.characterName, c.before, c.after]) if (x) rest = rest.replace(sq(x), "");
+  return sym(sq(c.attribute)).includes(sym(rest));
 }
 
 /** 변경 한 줄: 배지, 항목, 전→후, 근거 문장(펼치기, 위 내용과 겹치면 생략) */
