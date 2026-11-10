@@ -11,12 +11,14 @@ export function Badge({ type }: { type: ChangeType }) {
   return <span className={`inline-block shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold ${b.cls}`}>{b.label}</span>;
 }
 
-/** 근거 문장이 위에 보이는 "항목 전 → 후"와 같은 내용이면 true (예: "피해량: 75 ⇒ 80"). 문장형 근거는 false */
+/**
+ * 근거가 "이름: 전 ⇒ 후" 한 줄이고 전·후 말고 다른 숫자가 없으면 위 줄과 같은 내용이라 true
+ * (예: "체력 증가량: 레벨당 100 ⇒ 레벨당 105"). 문장형 근거나 "체력: 550 + 레벨당 103 ⇒ …"처럼 수치가 더 있으면 false
+ */
 function repeatsRow(c: Change): boolean {
-  if (!c.evidence || !c.before || !c.after) return false;
+  if (!c.evidence || !c.before || !c.after || !/[→⇒]/.test(c.evidence)) return false;
   const sq = (s: string) => s.replace(/\s+/g, "");
-  const rest = sq(c.evidence).replace(sq(c.before), "").replace(sq(c.after), "").replace(/[→⇒:>-]/g, "");
-  return sq(attributeLabel(c.attribute)).includes(rest);
+  return !/\d/.test(sq(c.evidence).replace(sq(c.before), "").replace(sq(c.after), ""));
 }
 
 /** 변경 한 줄: 배지, 항목, 전→후, 근거 문장(펼치기, 위 내용과 겹치면 생략) */
