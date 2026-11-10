@@ -33,10 +33,9 @@ export default async function PatchPage({ params }: { params: Promise<{ patchId:
     }));
   const split = modes.some((x) => x.mode !== "");
   const modeLabel = (mode: string) => mode || (p.gameName === "League of Legends" ? "소환사의 협곡" : "기본");
-  // 위쪽 집계는 목록 화면(▲▼)과 같은 기준: 기본 모드에서 상향이 하나라도 있는 캐릭터, 하향이 하나라도 있는 캐릭터
+  // 위쪽 집계는 아래 바로가기·목록 화면(▲▼)과 같은 기준: 기본 모드의 캐릭터별 판정. 상향 + 하향 + 조정 = 변경 캐릭터
   const characters = modes.find((x) => x.mode === "")?.characters ?? [];
-  const buffs = characters.filter((x) => x.cs.some((c) => c.changeType === "BUFF")).length;
-  const nerfs = characters.filter((x) => x.cs.some((c) => c.changeType === "NERF")).length;
+  const count = (t: ChangeType) => characters.filter((x) => x.v === t).length;
 
   return (
     <>
@@ -57,10 +56,11 @@ export default async function PatchPage({ params }: { params: Promise<{ patchId:
       </p>
 
       {characters.length > 0 && (
-        <dl className="mb-4 grid grid-cols-3 gap-2 text-center">
+        <dl className="mb-4 grid grid-cols-4 gap-2 text-center">
           <Stat label="변경 캐릭터" value={`${characters.length}명`} />
-          <Stat label="▲ 상향" value={`${buffs}명`} cls="text-emerald-600" />
-          <Stat label="▼ 하향" value={`${nerfs}명`} cls="text-rose-600" />
+          <Stat label="▲ 상향" value={`${count("BUFF")}명`} cls="text-emerald-600" />
+          <Stat label="▼ 하향" value={`${count("NERF")}명`} cls="text-rose-600" />
+          <Stat label="조정" value={`${count("ADJUST")}명`} cls="text-amber-600" />
         </dl>
       )}
 

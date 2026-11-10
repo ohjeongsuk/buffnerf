@@ -33,6 +33,12 @@ class AdminController {
 		return Map.of("collected", collectService.collect(gameId));
 	}
 
+	/** 저장된 패치의 코드 비교(DIFF) 결과를 다시 계산. 롤은 몇십 분 걸릴 수 있다 (CommunityDragon 요청 수천 번) */
+	@PostMapping("/rediff/{gameId}")
+	Map<String, Integer> rediff(@PathVariable Long gameId) {
+		return Map.of("rediffed", collectService.rediff(gameId));
+	}
+
 	@GetMapping("/patches")
 	List<PatchStatus> patches(@RequestParam Patch.ContentStatus status) {
 		return patches.findByContentStatus(status).stream().map(PatchStatus::of).toList();

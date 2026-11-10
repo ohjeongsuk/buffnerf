@@ -116,7 +116,7 @@ class PublicController {
 
 	record PatchSummary(Long id, String version, String title, Instant publishedAt, String summaryKo,
 			int buffs, int nerfs) {
-		/** 상향·하향은 캐릭터 수 기준 (한 캐릭터에 여러 항목이 바뀌어도 1명) */
+		/** 상향·하향은 캐릭터 수 기준: 바뀐 항목이 전부 상향인 캐릭터, 전부 하향인 캐릭터. 섞였으면 어느 쪽에도 안 센다 (화면의 "조정") */
 		static PatchSummary of(Patch p, List<BalanceChange> cs) {
 			return new PatchSummary(p.getId(), p.getVersion(), p.getTitle(), p.getPublishedAt(), p.getSummaryKo(),
 					count(cs, BalanceChange.ChangeType.BUFF), count(cs, BalanceChange.ChangeType.NERF));
@@ -124,9 +124,9 @@ class PublicController {
 
 		private static int count(List<BalanceChange> cs, BalanceChange.ChangeType t) {
 			// "[클래식] …"처럼 다른 게임 모드의 변경은 세지 않는다 (패치 상세 화면의 기본 모드 집계와 같은 기준)
-			return (int) cs.stream().filter(c -> c.getChangeType() == t && !c.getAttribute().startsWith("["))
-					.map(BalanceChange::getCharacterName)
-					.distinct().count();
+			return (int) cs.stream().filter(c -> !c.getAttribute().startsWith("["))
+					.collect(Collectors.groupingBy(BalanceChange::getCharacterName)).values().stream()
+					.filter(mine -> mine.stream().allMatch(c -> c.getChangeType() == t)).count();
 		}
 	}
 

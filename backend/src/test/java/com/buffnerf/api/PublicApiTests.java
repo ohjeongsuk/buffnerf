@@ -37,6 +37,9 @@ class PublicApiTests {
 		changes.save(new BalanceChange(p1, "재키", "방어력", ChangeType.BUFF, "20", "21", "방어력 20 → 21", Source.AI));
 		changes.save(new BalanceChange(p2, "재키", "공격력", ChangeType.NERF, "32", "31", "공격력 32 → 31", Source.AI));
 		changes.save(new BalanceChange(p2, "아야", "체력", ChangeType.NERF, "700", "680", "체력 700 → 680", Source.AI));
+		// 상향·하향이 섞인 캐릭터는 어느 쪽에도 세지 않는다
+		changes.save(new BalanceChange(p2, "현우", "공격력", ChangeType.BUFF, "30", "32", "공격력 30 → 32", Source.AI));
+		changes.save(new BalanceChange(p2, "현우", "체력", ChangeType.NERF, "700", "680", "체력 700 → 680", Source.AI));
 		// 다른 게임 모드 변경은 목록의 상향·하향 수에 넣지 않는다
 		changes.save(new BalanceChange(p2, "얀", "[아레나] 체력", ChangeType.NERF, "700", "680", "체력 700 → 680", Source.AI));
 		MockMvc mvc = MockMvcBuilders.webAppContextSetup(ctx).build();
@@ -46,6 +49,7 @@ class PublicApiTests {
 		mvc.perform(get("/api/games/" + er.getId() + "/patches"))
 				.andExpect(jsonPath("$.content[0].version").value("pub-2")) // 최신순
 				.andExpect(jsonPath("$.content[0].nerfs").value(2))
+				.andExpect(jsonPath("$.content[0].buffs").value(0))
 				.andExpect(jsonPath("$.content[1].buffs").value(1))        // 재키 2항목 = 1명
 				.andExpect(jsonPath("$.page.totalPages").value(1));         // 프론트가 쓰는 고정 형식
 
