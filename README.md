@@ -112,7 +112,7 @@ cd backend && ./mvnw spring-boot:run
 cd frontend && npm install && npm run dev
 ```
 
-- 데이터 채우기: `/admin`에서 관리자 키 입력 후 게임별 수동 수집. 원문이 있는 패치는 AI 처리가 자동으로 이어진다.
+- 데이터 채우기: `/admin`에서 관리자 키 입력 후 게임별 수동 수집 (화면에 링크가 없으니 주소를 직접 입력, 검색 엔진 제외). 원문이 있는 패치는 AI 처리가 자동으로 이어진다.
 - 테스트: `cd backend && ./mvnw verify` (Testcontainers로 Docker 필요)
 
 ## 환경변수
