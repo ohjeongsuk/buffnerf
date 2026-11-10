@@ -31,15 +31,21 @@ class ChampionKeys implements CharacterKeys {
 	}
 
 	private volatile Map<String, String> koNames; // 영문 ID → 한국어 이름 (최신 버전)
+	private volatile long loadedAt;
 
-	// ponytail: 앱 실행 중 처음 한 번만 받음. 새 챔피언 출시 후엔 재시작해야 한국어 이름이 보임.
 	@Override
 	public String displayName(Game game, String key) {
 		if (game.getSource() != Game.Source.LOL) return key;
-		if (koNames == null) {
+		// 모르는 ID(새 챔피언 출시)면 다시 받는다. 이름이 원래 없는 키 때문에 매 요청 받지 않게 1시간에 한 번까지
+		if (koNames == null || (!koNames.containsKey(key) && System.currentTimeMillis() - loadedAt > 3_600_000)) {
+			loadedAt = System.currentTimeMillis();
 			Map<String, String> m = new HashMap<>();
-			dataDragon.champions(dataDragon.versions().getFirst()).values().forEach(c -> m.put(c.id(), c.name()));
-			koNames = m;
+			try {
+				dataDragon.champions(dataDragon.versions().getFirst()).values().forEach(c -> m.put(c.id(), c.name()));
+				koNames = m;
+			} catch (RuntimeException e) {
+				if (koNames == null) throw e; // 다시 받기 실패는 기존 이름으로 계속 (화면이 깨지지 않게)
+			}
 		}
 		return koNames.getOrDefault(key, key);
 	}
