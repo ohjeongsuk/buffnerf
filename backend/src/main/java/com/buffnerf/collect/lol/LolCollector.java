@@ -42,8 +42,8 @@ class LolCollector implements PatchCollector {
 			if (knownVersions.contains(v)) continue;
 			String prev = versions.get(i + 1);
 			var changes = StatDiff.diff(
-					cache.computeIfAbsent(prev, dataDragon::champions),
-					cache.computeIfAbsent(v, dataDragon::champions),
+					cache.computeIfAbsent(prev, dataDragon::championsForDiff),
+					cache.computeIfAbsent(v, dataDragon::championsForDiff),
 					"Data Dragon " + prev + " → " + v);
 			out.add(withNote(v, changes));
 		}
