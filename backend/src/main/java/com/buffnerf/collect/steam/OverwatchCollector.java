@@ -43,10 +43,11 @@ class OverwatchCollector implements PatchCollector {
 		List<CollectedPatch> newestFirst = new ArrayList<>();
 		YearMonth month = YearMonth.now(KST);
 		for (int i = 0; i < MONTHS; i++, month = month.minusMonths(1)) newestFirst.addAll(parse(fetch(month)));
-		return newOnly(newestFirst, knownVersions).reversed();
+		// 저장된 패치도 돌려준다: 블리자드가 영문 제목을 나중에 한국어(날짜가 하루 다름)로 바꾸면 제목·날짜를 따라간다
+		return newOnly(newestFirst, Set.of()).reversed();
 	}
 
-	/** 이미 저장된 version은 빼고, 한 번의 수집에서 같은 version이 두 번이면 하나만 (DB 고유 조건 위반으로 수집 전체가 실패하지 않게) */
+	/** knownVersions에 있는 version은 빼고, 한 번의 수집에서 같은 version이 두 번이면 하나만 (DB 고유 조건 위반으로 수집 전체가 실패하지 않게) */
 	static List<CollectedPatch> newOnly(List<CollectedPatch> newestFirst, Set<String> knownVersions) {
 		Set<String> seen = new HashSet<>(knownVersions);
 		return newestFirst.stream().filter(p -> seen.add(p.version())).toList();

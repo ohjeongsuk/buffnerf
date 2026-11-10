@@ -22,10 +22,6 @@ export default async function PatchPage({ params }: { params: Promise<{ patchId:
   const older = at >= 0 ? list[at + 1] : undefined;
 
   const changes = shown(p.changes);
-  const characters = byCharacter(changes);
-  // 목록 화면(▲▼)과 같은 기준: 상향이 하나라도 있는 캐릭터, 하향이 하나라도 있는 캐릭터
-  const buffs = characters.filter((x) => x.cs.some((c) => c.changeType === "BUFF")).length;
-  const nerfs = characters.filter((x) => x.cs.some((c) => c.changeType === "NERF")).length;
   // 게임 모드별 묶음: 항목이 "[클래식] …"처럼 시작하면 그 모드, 아니면 기본 모드(""). 기본 모드가 맨 앞
   const modes = [...Map.groupBy(changes, (c) => /^\[([^\]]+)\]/.exec(c.attribute)?.[1] ?? "").entries()]
     .sort(([a], [b]) => (a === "" ? -1 : b === "" ? 1 : a.localeCompare(b, "ko")))
@@ -37,6 +33,10 @@ export default async function PatchPage({ params }: { params: Promise<{ patchId:
     }));
   const split = modes.some((x) => x.mode !== "");
   const modeLabel = (mode: string) => mode || (p.gameName === "League of Legends" ? "소환사의 협곡" : "기본");
+  // 위쪽 집계는 목록 화면(▲▼)과 같은 기준: 기본 모드에서 상향이 하나라도 있는 캐릭터, 하향이 하나라도 있는 캐릭터
+  const characters = modes.find((x) => x.mode === "")?.characters ?? [];
+  const buffs = characters.filter((x) => x.cs.some((c) => c.changeType === "BUFF")).length;
+  const nerfs = characters.filter((x) => x.cs.some((c) => c.changeType === "NERF")).length;
 
   return (
     <>

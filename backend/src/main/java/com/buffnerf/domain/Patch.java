@@ -63,6 +63,12 @@ public class Patch {
 		this.contentError = error;
 	}
 
+	/** 원문 제목이 바뀐 경우 (오버워치가 영문 제목을 나중에 한국어로 바꾼다) */
+	public void retitle(String title, Instant publishedAt) {
+		this.title = title;
+		this.publishedAt = publishedAt;
+	}
+
 	public void setSummaryKo(String summaryKo) { this.summaryKo = summaryKo; }
 	public void setPatchNote(boolean patchNote) { this.isPatchNote = patchNote; }
 	public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }

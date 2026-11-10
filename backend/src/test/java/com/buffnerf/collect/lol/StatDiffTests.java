@@ -25,4 +25,17 @@ class StatDiffTests {
 				new Change("Aatrox", "armor", ChangeType.NERF, "38", "36.5", "e"),
 				new Change("Aatrox", "attackdamage", ChangeType.BUFF, "60", "62", "e")), out);
 	}
+
+	@Test
+	void ignoresStatThatDataDragonZeroedForEveryChampion() {
+		var prev = Map.of(
+				"Aatrox", new Champion("Aatrox", "아트록스", Map.of("attackdamageperlevel", 5.0, "armor", 38.0)),
+				"Ahri", new Champion("Ahri", "아리", Map.of("attackdamageperlevel", 3.0, "armor", 21.0)));
+		var curr = Map.of(
+				"Aatrox", new Champion("Aatrox", "아트록스", Map.of("attackdamageperlevel", 0.0, "armor", 0.0)),
+				"Ahri", new Champion("Ahri", "아리", Map.of("attackdamageperlevel", 0.0, "armor", 21.0)));
+
+		assertEquals(List.of(new Change("Aatrox", "armor", ChangeType.NERF, "38", "0", "e")),
+				StatDiff.diff(prev, curr, "e"), "전원 0이 된 항목만 뺀다");
+	}
 }

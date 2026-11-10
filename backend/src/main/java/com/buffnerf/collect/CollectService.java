@@ -40,9 +40,16 @@ public class CollectService {
 				.orElseThrow(() -> new NoSuchElementException("no collector for " + game.getName()));
 
 		// 외부 호출은 트랜잭션 밖에서, 저장만 한 트랜잭션으로 (중간 실패 시 반쯤 저장되지 않게)
-		var collected = collector.collect(game, patches.findVersionsByGameId(gameId));
-		tx.executeWithoutResult(s -> {
+		var known = patches.findVersionsByGameId(gameId);
+		var collected = collector.collect(game, known);
+		int added = tx.execute(s -> {
+			int n = 0;
 			for (var cp : collected) {
+				if (known.contains(cp.version())) {
+					patches.findByGameIdAndVersion(gameId, cp.version()).ifPresent(p -> p.retitle(cp.title(), cp.publishedAt()));
+					continue;
+				}
+				n++;
 				Patch p = new Patch(game, cp.version(), cp.title(), cp.publishedAt());
 				p.setSourceUrl(cp.sourceUrl());
 				if (cp.rawContent() != null) p.setContent(cp.rawContent(), Patch.ContentSource.CRAWLED);
@@ -52,10 +59,11 @@ public class CollectService {
 						ch.attribute(), ch.changeType(), ch.before(), ch.after(), ch.evidence(),
 						BalanceChange.Source.DIFF)).toList());
 			}
+			return n;
 		});
-		log.info("collected {} patches for {}", collected.size(), game.getName());
-		if (!collected.isEmpty()) ai.processPendingAsync();
-		return collected.size();
+		log.info("collected {} patches for {}", added, game.getName());
+		if (added > 0) ai.processPendingAsync();
+		return added;
 	}
 
 	// ponytail: 실패 시 재시도 없이 기록만 하고 다음 게임으로. 외부 API가 자주 끊기면 재시도 추가.
