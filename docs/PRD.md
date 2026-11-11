@@ -177,6 +177,6 @@ P0는 2주 안에 반드시 완성하고, P1은 시간이 남을 때, P2는 이�
 
 - [x] LLM: **Gemini API 무료 등급 `gemini-3.5-flash`** (2026-11-09 변경. 무료, EC2에서 직접 호출 가능. 모델당 하루 20회 = 패치 10개). `LLM_PROVIDER`로 로컬 Ollama `qwen3:8b`, Claude Sonnet 5.5로 전환 가능. 이전 결정: 로컬 Ollama qwen3:8b (2026-11-06, 이 PC GPU에서만 동작), 그 전: Claude Sonnet 5.5 (입력 $2 / 출력 $10, 100만 토큰당). 패치 40개 기준 예상 비용 약 $16, Batch API 사용 시 약 $8. LlmClient 인터페이스로 감싸 다른 모델로 교체할 수 있게 한다.
 - [x] Steam 게임: **오버워치**(appid 2357570), **이터널 리턴**(appid 1049590). 둘 다 캐릭터별 상향/하향이 수치로 나오는 게임이다. Steam 뉴스에 패치노트 전문이 없으면 롤과 같은 방식(공식 사이트 자동 수집 → 실패 시 수동 등록)으로 원문을 확보한다.
-- [x] 배포: **AWS 서울 리전** — 프론트 Amplify Hosting, 백엔드 EC2 t3.small(2GB), DB RDS PostgreSQL db.t4g.micro. 예상 비용은 월 약 $37(EC2 약 $19 + RDS 약 $18, Amplify는 무료 한도 안), 2주 기준 약 $18이며 신규 계정 크레딧으로 충당한다. 첫날 AWS Budgets로 예산 알림을 건다.
+- [x] 배포: **AWS 서울 리전** — 프론트 Amplify Hosting, 백엔드 EC2 t3.small(2GB), DB RDS PostgreSQL db.t4g.micro. 예상 비용은 월 약 $37(EC2 약 $19 + RDS 약 $18, Amplify는 무료 한도 안), 2주 기준 약 $18이며 신규 계정 크레딧으로 충당한다. 첫날 AWS Budgets로 예산 알림을 건다. (2026-11 변경: RDS를 없애고 EC2에 PostgreSQL 직접 설치, 월 약 $22)
 - [x] 서비스 이름: **BuffLog (버프로그)** (2026-11-09 변경, 이전: BuffNerf). 저장소·서버 서비스 이름 등 내부 식별자는 `buffnerf` 유지
 - [x] Amplify Hosting이 지원하는 Next.js 버전: **Next.js 15 (15.5.29)로 고정** (2026년 10월 기준 공식 SSR 지원 12~15)
