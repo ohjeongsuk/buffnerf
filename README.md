@@ -21,7 +21,7 @@
 ## 구성
 
 ```
-[Next.js 15 (Amplify)] ──/api──▶ [Spring Boot 4 (EC2)] ──▶ [PostgreSQL (RDS)]
+[Next.js 15 (Amplify)] ──/api──▶ [Spring Boot 4 (EC2)] ──▶ [PostgreSQL (같은 EC2)]
                                         │
                                         ├─▶ 공식 패치노트 페이지 (Jsoup 크롤링)
                                         ├─▶ Riot Data Dragon, Steam News API
@@ -38,7 +38,7 @@
 | --- | --- |
 | 프론트 | AWS Amplify Hosting (Next.js SSR), main 브랜치 push 시 자동 빌드 |
 | 백엔드 | EC2 t3.small, systemd 서비스, 매일 06:00 수집·AI 처리 |
-| DB | RDS PostgreSQL 17, db.t4g.micro (외부 비공개, EC2에서만 접속) |
+| DB | PostgreSQL 17, EC2에 직접 설치 (외부 비공개, 매일 pg_dump 백업). RDS에서 옮겨 월 약 $20 절감 |
 
 절차와 스크립트는 [`docs/DEPLOY.md`](docs/DEPLOY.md), [`deploy/`](deploy/) 참고.
 
