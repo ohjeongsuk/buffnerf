@@ -7,14 +7,18 @@ export const dynamic = "force-dynamic";
 
 const FEED = 6;
 
-/** 홈: 게임 선택 + 게임별 최신 패치 + 전체 최근 패치 피드 (F5) */
-export default async function Home() {
+/** 홈: 게임 선택 + 게임별 최신 패치 + 최근 패치 피드 (F5, ?game=<id>로 게임별 탭) */
+export default async function Home({ searchParams }: { searchParams: Promise<{ game?: string }> }) {
+  const tab = (await searchParams).game;
   const games = (await api<Game[]>("/api/games")) ?? [];
   const recent = await Promise.all(
     games.map((g) => api<Page<PatchSummary>>(`/api/games/${g.id}/patches?size=${FEED}`).then((p) => p?.content ?? [])),
   );
+  // 모르는 id면 전체로
+  const selected = games.find((g) => String(g.id) === tab);
   const feed = games
     .flatMap((g, i) => recent[i].map((p) => ({ game: g, p })))
+    .filter(({ game }) => !selected || game.id === selected.id)
     .sort((a, b) => (b.p.publishedAt ?? "").localeCompare(a.p.publishedAt ?? ""))
     .slice(0, FEED);
 
@@ -49,9 +53,32 @@ export default async function Home() {
         })}
       </ul>
 
-      {feed.length > 0 && (
+      {games.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-2 text-lg font-semibold">최근 패치</h2>
+          <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <h2 className="text-lg font-semibold">최근 패치</h2>
+            <nav aria-label="게임별 최근 패치" className="flex flex-wrap gap-2">
+              {[{ id: undefined, name: "전체" }, ...games].map((g) => {
+                const active = g.id === selected?.id;
+                return (
+                  <Link
+                    key={g.id ?? "all"}
+                    href={g.id ? `/?game=${g.id}` : "/"}
+                    scroll={false}
+                    aria-current={active ? "page" : undefined}
+                    className={`rounded-full border px-3 py-1 text-sm ${
+                      active
+                        ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
+                        : "border-neutral-300 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+                    }`}
+                  >
+                    {g.name}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+          {feed.length === 0 && <Empty>수집된 패치 없음</Empty>}
           <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
             {feed.map(({ game, p }) => (
               <li key={p.id}>

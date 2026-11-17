@@ -11,21 +11,21 @@
 | 기능 | 설명 |
 | --- | --- |
 | 패치 수집 | 매일 06:00(KST) 게임별 공식 패치노트를 자동 수집. 실패하면 관리자가 원문을 직접 등록 |
-| 롤 스탯 diff | Riot Data Dragon의 버전별 챔피언 기본 스탯을 코드로 비교 |
+| 롤 스탯 diff | Riot Data Dragon의 버전별 챔피언 기본 스탯과 스킬(Q·W·E·R) 재사용 대기시간·소모량을 코드로 비교. 레벨당 공격력은 CommunityDragon 값으로 비교 |
 | AI 3줄 요약 | 패치노트를 한국어 3문장으로 요약 |
 | AI 구조화 추출 | 캐릭터·항목·상향/하향·변경 전후 값·**원문 근거 문장**을 JSON 스키마로 추출 |
 | 캐릭터 타임라인 | 캐릭터 하나의 패치별 변경 이력을 시간순으로 |
-| AI 정확도 | 롤은 AI 추출 결과를 Data Dragon diff와 대조해 재현율·정밀도 계산 (패치 상세 API의 `accuracy`, 화면에는 표시하지 않음) |
+| AI 정확도 | 롤은 AI 추출 결과를 기본 스탯 diff와 대조해 재현율·정밀도 계산 (패치 상세 API의 `accuracy`, 화면에는 표시하지 않음) |
 | 원문 링크 | 모든 패치에 공식 패치노트 원문 링크 |
 
 ## 구성
 
 ```
-[Next.js 15 (Amplify)] ──/api──▶ [Spring Boot 4 (EC2)] ──▶ [PostgreSQL (같은 EC2)]
-                                        │
-                                        ├─▶ 공식 패치노트 페이지 (Jsoup 크롤링)
-                                        ├─▶ Riot Data Dragon, Steam News API
-                                        └─▶ LLM: Gemini API (기본) / Ollama / Claude
+[Next.js 15 (Amplify)] ──HTTPS /api──▶ [Caddy → Spring Boot 4 (EC2)] ──▶ [PostgreSQL (같은 EC2)]
+                                                     │
+                                                     ├─▶ 공식 패치노트 페이지 (Jsoup 크롤링)
+                                                     ├─▶ Riot Data Dragon, CommunityDragon, Steam News API
+                                                     └─▶ LLM: Gemini API (기본) / Ollama / Claude
 ```
 
 - 백엔드: Java 21, Spring Boot 4.1.2, JPA + Flyway, `backend/`
@@ -37,7 +37,7 @@
 | 구성 | 서비스 (서울 리전) |
 | --- | --- |
 | 프론트 | AWS Amplify Hosting (Next.js SSR), main 브랜치 push 시 자동 빌드 |
-| 백엔드 | EC2 t3.small, systemd 서비스, 매일 06:00 수집·AI 처리 |
+| 백엔드 | EC2 t3.small, systemd 서비스, 매일 06:00 수집·AI 처리. 앞단 Caddy가 HTTPS 처리 (sslip.io 인증서 자동 발급, 8080은 외부 비공개) |
 | DB | PostgreSQL 17, EC2에 직접 설치 (외부 비공개, 매일 pg_dump 백업). RDS에서 옮겨 월 약 $20 절감 |
 
 절차와 스크립트는 [`docs/DEPLOY.md`](docs/DEPLOY.md), [`deploy/`](deploy/) 참고.
@@ -46,7 +46,7 @@
 
 | 게임 | 패치노트 원문 | 보조 데이터 |
 | --- | --- | --- |
-| 리그 오브 레전드 | leagueoflegends.com/ko-kr 패치노트 | Data Dragon (챔피언 기본 스탯) |
+| 리그 오브 레전드 | leagueoflegends.com/ko-kr 패치노트 | Data Dragon (챔피언 기본 스탯, 스킬 재사용 대기시간·소모량), CommunityDragon (레벨당 공격력) |
 | 오버워치 | overwatch.blizzard.com/ko-kr 패치노트 (월별 페이지) | - |
 | 이터널 리턴 | playeternalreturn.com 패치노트 글 | Steam News API (새 패치 글 링크 찾기) |
 
